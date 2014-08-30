@@ -1,5 +1,9 @@
 #include <stdio.h>
-main()
+int main(int argc, char *argv[])
 {
-	printf("Hello world!\n");
+	if( argc == 2 ){
+		printf("%s\n",argv[1]);
+	}else{
+		printf("Hello world\n");
+	}
 }
