@@ -13,4 +13,4 @@ io.o: io.c io.h
 	 gcc -c io.c
 
 clean:
-	rm -rf *o main.exe
+	rm -rf *o opg1.exe
