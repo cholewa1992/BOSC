@@ -16,27 +16,48 @@
 #define HOSTNAMEMAX 100
 
 /* --- use the /proc filesystem to obtain the hostname --- */
-char *gethostname(char *hostname)
+char *findhostname(char *hostname)
 {
-	hostname = "cool";
+	gethostname(hostname,HOSTNAMEMAX);
 	return hostname;
 }
 
 /* --- execute a shell command --- */
 int executeshellcmd (Shellcmd *shellcmd)
 {
-	printshellcmd(shellcmd);
+	//printshellcmd(shellcmd);
+	
+	Cmd *cmdlist = shellcmd -> the_cmds;
+	
+	if(cmdlist != NULL){
+		char **cmd = cmdlist->cmd;
+		cmdlist = cmdlist->next;
+	
+		char **runcmd = cmd;	
+		if(*runcmd != NULL){
+			pid_t pid = fork();
+			if(pid == 0){
+				execvp(*runcmd, runcmd);
+				exit(0);
+			}else{
+				int status = 0;	
+				waitpid(pid,&status,0);
+			}			
+		}
+
+	}
  	return 0;
 }
 
 	/* --- main loop of the simple shell --- */
+int main (int argc, char *argv[]){
 	/* initialize the shell */
 	char *cmdline;
 	char hostname[HOSTNAMEMAX];
 	int terminate = 0;
 	Shellcmd shellcmd;
   
-  	if (gethostname(hostname)) {
+  	if (findhostname(hostname)) {
     		/* parse commands until exit or ctrl-c */
     		while (!terminate) {
       			printf("%s", hostname);
