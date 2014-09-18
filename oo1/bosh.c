@@ -12,6 +12,11 @@
 #include "parser.h"
 #include "print.h"
 
+#include "forback.h"
+#include "redirect.h"
+#include "pipe.h"
+
+
 /* --- symbolic constants --- */
 #define HOSTNAMEMAX 100
 
@@ -25,7 +30,7 @@ char *findhostname(char *hostname)
 /* --- execute a shell command --- */
 int executeshellcmd (Shellcmd *shellcmd)
 {
-	//printshellcmd(shellcmd);
+	printshellcmd(shellcmd);
 	
 	Cmd *cmdlist = shellcmd -> the_cmds;
 	
