@@ -116,7 +116,7 @@ int isValidCmd(char **cmd){
 	strcpy(str2,path2);
 	strcat(str2, *cmd);
 
-	return access( str1, F_OK) != -1 || access (str2,F_OK) != -1;
+	return access(*cmd, F_OK) != -1 || access( str1, F_OK) != -1 || access (str2,F_OK) != -1;
 }
 
 
