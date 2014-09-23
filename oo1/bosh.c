@@ -107,16 +107,19 @@ int isValidCmd(char **cmd){
 	if(strncmp(*cmd,"exit",4) == 0) return -1;
 	char str1[100];
 	char str2[100];
+	char str3[100];
 
 	char *path1 = "/bin/";
 	char *path2 = "/usr/bin/";
+	char *path3 = "./";
 
 	strcpy(str1,path1);
 	strcat(str1, *cmd);
 	strcpy(str2,path2);
 	strcat(str2, *cmd);
-
-	return access(*cmd, F_OK) != -1 || access( str1, F_OK) != -1 || access (str2,F_OK) != -1;
+	strcpy(str3,path3);
+	strcat(str3, *cmd);
+	return access( str3, F_OK) != -1 || access( str1, F_OK) != -1 || access (str2,F_OK) != -1;
 }
 
 
