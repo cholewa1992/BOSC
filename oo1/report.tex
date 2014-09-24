@@ -49,7 +49,7 @@ Denne rapport omhandler implementationen af vores shell BOSC. Specifikationerne 
 \item Tryk på Ctrl-C skal afslutte det program, der kører i {\tt bosh} shell’en, men ikke shell’en selv.
 \end{enumerate}
 
-Følgende vil havde om hvordan vi har implementeret følgende features.
+Følgende vil handle om vores implementation af disse features 
 
 \section{Feature 1}
 \section{Feature 2}
@@ -105,7 +105,7 @@ int executeshellcmd(Shellcmd *shellcmd){
 
 \section{Feature 4}
 
-Hvis symbolet {\tt >} optræder i kommandoen skal vi redirecte output til filnavnet på veste side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen redirecte input til at være filen fra veste side. eg {\tt cmd < file}. Dette har vi løst med følgende logik.
+Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på veste side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra veste side. eg {\tt cmd < file}. Dette har vi løst med følgende logik.
 
 \begin{lstlisting}
 if(in == NULL && out == NULL){
@@ -167,7 +167,7 @@ int redirOut(char *outFile, Cmd *cmdlist){
 
 \section{Feature 5}
 
-En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. eg {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. Vi har i vores shell implementeret dette på følgende måde
+En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. eg {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. Vi har i vores shell implementeret dette med følgende logik. Denne metode kaldt af de metoder som var vist implementeret i feature 4.
 
 \begin{lstlisting}
 int executecmd(Cmd *cmdlist){
@@ -207,6 +207,8 @@ int executecmd(Cmd *cmdlist){
 \section{Feature 6}
 
 Denne funktion er allerede forklaret som en del af feature 6. 
+
++++ Der skal skrives noget om at vi returnerer 1 til main metoden for at lukke den ned. +++
 
 \section{Feature 7}
 
