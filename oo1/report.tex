@@ -5,12 +5,14 @@
 \usepackage{listings}
 \usepackage{color}
 \usepackage{courier}
+\usepackage{parskip}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 
-\lstset{frame=tb,
+\lstset{
+  frame=,
   language=C,
   aboveskip=3mm,
   belowskip=3mm,
@@ -24,7 +26,7 @@
   stringstyle=\color{mauve},
   breaklines=true,
   breakatwhitespace=true
-  tabsize=3
+  tabsize=4
 }
 
 % Title Page
@@ -54,11 +56,12 @@ Følgende vil handle om vores implementation af disse features
 \section{Feature 1}
 \section{Feature 2}
 
-For at en bruger kan bruge kommandoerne {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver på vores ubuntu installation. Vi leder i folderne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Vi leder i førstnævnte for også at gøre det muligt at køre filer som ligger i den sti man står i. Hvis filen er blevet fundet returneres stien, hvis ikke returneres {\tt NULL}. Hvis kommandoen {\tt exit} blev fundet returneres char arrayet {\tt exit}. Kodet stykket ses her under.
+For at en bruger kan bruge kommandoerne {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver på vores ubuntu installation. Vi leder i folderne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Dette gør {\tt execvp} dog selv, men vi checker stadig til at starte med at filerne findes i disse foldere. Hvis filen er blevet fundet returneres {\tt 1} ({\tt true}), hvis ikke returneres {\tt 0} ({\tt false}). Hvis kommandoen {\tt exit} blev fundet returneres {\tt -1}. Kode stykket ses her under. Status koderne bliver tolket til eventuelle fejlbeskeder i vores executeshellcmd metode.
 
 \begin{lstlisting}
 int isValidCmd(char **cmd){
     if(strncmp(*cmd,"exit",4) == 0) return -1;
+
     char str1[100];
     char str2[100];
     char str3[100];
@@ -73,6 +76,7 @@ int isValidCmd(char **cmd){
     strcat(str2, *cmd);
     strcpy(str3,path3);
     strcat(str3, *cmd);
+
     return 
         access ( str1, F_OK ) != -1 || 
         access ( str2, F_OK ) != -1 || 
@@ -212,11 +216,7 @@ Denne funktion er allerede forklaret som en del af feature 6.
 
 \section{Feature 7}
 
-
-\begin{lstlisting}
-
-\end{lstlisting}
-
+Denne feature nåede ikke at blive implementeret i vores {\tt BOSH} shell.
 
 
 \end{document}          
