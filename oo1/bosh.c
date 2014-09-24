@@ -124,11 +124,10 @@ int isValidCmd(char **cmd){
 
 
 // redirect in and out
-// Note why is a file format (e.g. '.txt') necessary?
 int redirInOut(char *inFile, char *outFile, Cmd *cmdlist){
 	
   	int fidIn  = open(inFile, O_RDONLY);
-	int fidOut = open(outFile, O_WRONLY | O_CREAT | O_APPEND); // 				
+	int fidOut = open(outFile, O_WRONLY | O_CREAT | O_APPEND); 				
 	close(0); close(1);
 	dup(fidIn); dup(fidOut);
 	int status = executecmd(cmdlist);
@@ -153,7 +152,7 @@ int redirIn(char *inFile, Cmd *cmdlist){
 
 // redirect out
 int redirOut(char *outFile, Cmd *cmdlist){
-	int fid = open(outFile, O_WRONLY | O_CREAT | O_APPEND); // 				
+	int fid = open(outFile, O_WRONLY | O_CREAT | O_APPEND);			
 	close(1); // close standard output
 	dup(fid); // duplicate file-descriptor
 
