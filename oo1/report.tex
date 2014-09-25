@@ -60,7 +60,7 @@ Vi håndterer brugerens input uden brug af andre shells. F.e.ks bruger vi ikke {
 
 \section{Feature 2}
 
-For at en bruger kan bruge kommandoerne {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver på vores ubuntu installation. Vi leder i folderne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Dette gør {\tt execvp} dog selv, men vi checker stadig til at starte med at filerne findes i disse foldere. Hvis filen er blevet fundet returneres {\tt 1} ({\tt true}), hvis ikke returneres {\tt 0} ({\tt false}). Hvis kommandoen {\tt exit} blev fundet returneres {\tt -1}. Kode stykket ses her under. Status koderne bliver tolket til eventuelle fejlbeskeder i vores executeshellcmd metode.
+For at en bruger kan bruge kommandoerne {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver på vores Ubuntu installation. Vi leder i mapperne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Dette gør {\tt execvp} dog selv, men vi checker stadig til at starte med at filerne findes i disse mapper. Hvis filen er blevet fundet returneres {\tt 1} ({\tt true}), hvis ikke returneres {\tt 0} ({\tt false}). Hvis kommandoen {\tt exit} blev fundet returneres {\tt -1}. Kode stykket ses her under. Status koderne bliver tolket til eventuelle fejlbeskeder i vores executeshellcmd metode.
 
 \begin{lstlisting}
 int isValidCmd(char **cmd){
@@ -91,7 +91,7 @@ int isValidCmd(char **cmd){
 
 \section{Feature 3}
 
-Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. I shellcmd structen vil feltet {\tt background} være sat til {\tt 1} ({\tt true}) hvis processen skal køres som en baggrundsproces. Som det kan ses i kode stykket neden for venter vi derfor kun på child processen hvis {\tt background} er {\tt 0} ({\tt false}) 
+Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. I shellcmd structen vil feltet {\tt background} være sat til {\tt 1} ({\tt true}) hvis processen skal køres som en baggrundsproces. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}).
 \begin{lstlisting}
 int executeshellcmd(Shellcmd *shellcmd){
     
@@ -113,7 +113,7 @@ int executeshellcmd(Shellcmd *shellcmd){
 
 \section{Feature 4}
 
-Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på veste side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra veste side. eg {\tt cmd < file}. Dette har vi løst med følgende logik.
+Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på venstre side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra venstre side. eg {\tt cmd < file}. Dette har vi løst med følgende logik.
 
 \begin{lstlisting}
 if(in == NULL && out == NULL){
@@ -175,7 +175,7 @@ int redirOut(char *outFile, Cmd *cmdlist){
 
 \section{Feature 5}
 
-En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. eg {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. Vi har i vores shell implementeret dette med følgende logik. Denne metode kaldt af de metoder som var vist implementeret i feature 4.
+En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. eg {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. Vi har i vores shell implementeret dette med følgende logik. Denne metode kaldes af de metoder som var vist i feature 4.
 
 \begin{lstlisting}
 int executecmd(Cmd *cmdlist){
