@@ -64,5 +64,4 @@ void *runner(void *args){
 	*rargs->sum = sum;
 	pthread_exit(0);
 }
-	
 
