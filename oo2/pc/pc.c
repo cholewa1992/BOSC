@@ -13,12 +13,10 @@ int c,p,buffer_size,np,consumed= 0, produced = 0;
 void *producer(void *args);
 void *consumer(void *args);
 
-
-void rsleep(int time){
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	srand(tv.tv_usec);
-	sleep(rand() % (time * 2));
+void rsleep(float wait_time_ms)
+{
+  wait_time_ms = ((float)rand())*wait_time_ms / (float)RAND_MAX;
+  usleep((int) (wait_time_ms * 1e3f)); // convert from ms to us
 }
 
 int main(int argc, char* argv[]){
@@ -78,7 +76,7 @@ void *producer(void *args){
 		list_add(buffer, n);
 		printf("Producer %i produced %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
 		sem_post(&full);
-		rsleep(5);
+		rsleep(500);
 	}
 }
 
@@ -95,6 +93,6 @@ void *consumer(void *args){
 		Node *n = list_remove(buffer);
 		printf("Consumer %i consumed %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
 		sem_post(&empty);
-		rsleep(5);
+		rsleep(500);
 	}
 }
