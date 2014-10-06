@@ -5,15 +5,21 @@
 #include <sys/time.h>
 #include "list.h"
 
-sem_t empty, full, mutex;
+sem_t empty, full, csem, psem;
 List *buffer;
-int terminate = 0;
-int c,p,buffer_size,np,products = 0;
+int c,p,buffer_size,np,consumed= 0, produced = 0;
 
 
 void *producer(void *args);
 void *consumer(void *args);
 
+
+void rsleep(int time){
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	srand(tv.tv_usec);
+	sleep(rand() % (time * 2));
+}
 
 int main(int argc, char* argv[]){
 	if(argc != 5){
@@ -39,23 +45,21 @@ int main(int argc, char* argv[]){
 
 	sem_init(&empty, 0, buffer_size);
 	sem_init(&full, 0, 0);
-	sem_init(&mutex, 0, 1);
+	sem_init(&psem, 0, 1);
+	sem_init(&csem, 0, 1);
 
 	buffer = list_new();	
 
 	pthread_t tid[c+p];
-	for(int i = 0; i < c; i++){
-		pthread_create(&tid[i],NULL,consumer,(void *) i+1); //Starting the proces
+	for(int i = 0; i < p; i++){
+		pthread_create(&tid[i],NULL,producer,(void *) i+1);
 	}
-	for(int i = c; i < p+c; i++){
-		pthread_create(&tid[i],NULL,producer,(void *) i-c+1); //Starting the proces
+	for(int i = 0; i < c; i++){
+		pthread_create(&tid[i+p],NULL,consumer,(void *) i+1);
 	}
 
-	for(int i = c; i < c+p; i++){
+	for(int i = 0; i < c+p; i++){
 		pthread_join(tid[i],NULL);
-	}
-	for(int i = 0; i < c; i++){
-		pthread_detach(tid[i]);
 	}
 }
 
@@ -63,36 +67,34 @@ int main(int argc, char* argv[]){
 void *producer(void *args){
 	int nr = args;
 	while(1){
-		sem_wait(&empty);
-		sem_wait(&mutex);
-		products++;
-		if(products > np){
-			sem_post(&mutex);
+		sem_wait(&psem);
+		if(++produced > np){
+			sem_post(&psem);
 			return 0;
 		}
-		sem_post(&mutex);
+		sem_wait(&empty);
+		sem_post(&psem);
 		Node *n = node_new_str("string");
 		list_add(buffer, n);
 		printf("Producer %i produced %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
 		sem_post(&full);
-		sleep(rand() % 1);
+		rsleep(5);
 	}
-	return 0;
 }
 
 void *consumer(void *args){
 	int nr = args;
-	while(!terminate){
+	while(1){
+		sem_wait(&csem);
+		if(++consumed > np){
+			sem_post(&csem);
+			return 0;
+		}
 		sem_wait(&full);
+		sem_post(&csem);
 		Node *n = list_remove(buffer);
 		printf("Consumer %i consumed %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
 		sem_post(&empty);
+		rsleep(5);
 	}
-	return 0;
 }
-
-
-
-
-
-
