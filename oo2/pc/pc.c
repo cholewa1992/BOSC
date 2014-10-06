@@ -51,31 +51,33 @@ int main(int argc, char* argv[]){
 		pthread_create(&tid[i],NULL,producer,(void *) i-c+1); //Starting the proces
 	}
 
-	for(int i = 0; i < c+p; i++){
+	for(int i = c; i < c+p; i++){
 		pthread_join(tid[i],NULL);
+	}
+	for(int i = 0; i < c; i++){
+		pthread_detach(tid[i]);
 	}
 }
 
 
 void *producer(void *args){
 	int nr = args;
-	while(!terminate){
+	while(1){
 		sem_wait(&empty);
-
 		sem_wait(&mutex);
 		products++;
-		if(products >= np){
-			terminate++;
-			break;
+		if(products > np){
+			sem_post(&mutex);
+			return 0;
 		}
 		sem_post(&mutex);
-
 		Node *n = node_new_str("string");
 		list_add(buffer, n);
 		printf("Producer %i produced %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
-		sem_post(&full);	
-		sleep(rand() % 10);
+		sem_post(&full);
+		sleep(rand() % 1);
 	}
+	return 0;
 }
 
 void *consumer(void *args){
@@ -85,8 +87,8 @@ void *consumer(void *args){
 		Node *n = list_remove(buffer);
 		printf("Consumer %i consumed %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
 		sem_post(&empty);
-		sleep(rand() % 10);
 	}
+	return 0;
 }
 
 
