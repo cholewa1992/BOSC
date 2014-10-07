@@ -96,14 +96,28 @@ int main(int argc, char* argv[])
 	scanf("%d", &m);
 	printf("Number of resources: ");
 	scanf("%d", &n);
-
+	
 	/* Allocate memory for state */
+	s = (State *) malloc(2 * sizeof(int *) + 3 * sizeof(int **));
+	s -> resource 	= 	malloc(n* sizeof(int));
+	s -> available	=	malloc(n * sizeof(int));
+	s -> max 	= 	malloc(m * sizeof(int *));
+	s -> need 	=	malloc(m * sizeof(int *));
+	s -> allocation = 	malloc(m * sizeof(int *));
+	
+	for(int i = 0; i < m; i++){
+		s -> max[i] = malloc(n * sizeof(int));
+		s -> need[i] = malloc(n * sizeof(int));
+		s -> allocation[i] = malloc(n * sizeof(int));
+	}
+
 	if (s == NULL) { printf("\nYou need to allocate memory for the state!\n"); exit(0); };
 
 	/* Get current state as input */
 	printf("Resource vector: ");
 	for(i = 0; i < n; i++)
 		scanf("%d", &s->resource[i]);
+	printf("ok\n");
 	printf("Enter max matrix: ");
 	for(i = 0;i < m; i++)
 		for(j = 0;j < n; j++)
@@ -163,4 +177,15 @@ int main(int argc, char* argv[])
 	free(tid);
 
 	/* Free state memory */
+	for(int i = 0; i < m; i++){
+		free(s -> max[i]);
+		free(s -> need[i]);
+		free(s -> allocation[i]);
+	}
+	free(s -> max);
+	free(s -> need);
+	free(s -> allocation);
+	free(s -> available);
+	free(s -> resource);
+	free(s);
 }
