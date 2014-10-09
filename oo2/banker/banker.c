@@ -50,7 +50,7 @@ void subarr(int arr1[], int arr2[], int n){
 	}
 }
 
-/* Bankers safty alog */
+/* Bankers safty algorithm */
 int safety_check(){
 	
 	/* Set work = available */
@@ -62,7 +62,6 @@ int safety_check(){
 	for(int i = 0; i < m; i++){
 		finish[i] = 0;
 	}
-	
 	
 	/* If finish[i] == false and need[i] <= work then allocate, set finish[i] to true and restart loop */
 	for(int i = 0; i < m; i++){
@@ -93,12 +92,10 @@ int resource_request(int i, int *request)
 	/* Aquire lock for state */
 	pthread_mutex_lock(&state_mutex);	
 	
-	/* if request > avalible then wait and call self recursively */
+	/* if request > avalible then return 0*/
 	if(!slarger(request, s->available, n)){
 		pthread_mutex_unlock(&state_mutex);
-		printf("r not a for p%i/n", i);
-		Sleep(100);
-		return resource_request(i, request);
+		return 0; 
 	}
 	
 	/* Allocate resources */
@@ -106,14 +103,13 @@ int resource_request(int i, int *request)
 	addarr(s->allocation[i], request, n);
 	subarr(s->need[i], request, n);
 	
-	/* Check if safe state else reverse allocation, wait and call self recursively */
+	/* Check if safe state else reverse allocation and return 0 */
 	if(!safety_check()){
 		addarr(s->available, request, n);
 		subarr(s->allocation[i], request, n);
 		addarr(s->need[i], request, n);
 		pthread_mutex_unlock(&state_mutex);
-		Sleep(100);
-		return resource_request(i, request);
+		return 0; 
 	}
 
 	/* Release lock for state */
@@ -155,7 +151,7 @@ void generate_release(int i, int *request)
 	int j, sum = 0;
 	while (!sum) {
 		for (j = 0;j < n; j++) {
-			request[j] = s->allocation[i][j]; //* ((double)rand())/ (double)RAND_MAX;
+			request[j] = s->allocation[i][j]; // * ((double)rand())/ (double)RAND_MAX;
 			sum += request[j];
 		}
 	}

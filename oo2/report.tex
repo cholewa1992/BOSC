@@ -40,7 +40,7 @@
 \begin{document}
 \maketitle
 \chapter{Multitrådet sum}
-På en multicore processror kan vi kører til i parallel. Det vil vi i denne opgave udnytte til hurtigere at udregne $ sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} $.
+På en multicore processror kan vi kører instruktioner i parallel. Det vil vi i denne opgave udnytte til hurtigere at udregne $ sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} $.
 
 Først vil vi beskrive hvordan man kører ting i parallel. Vi bruger biblioteket pthread som bruger linux kernes POSIX kald. En tråd har hver sin stack, process nummer, program counter og register, men deler de andre ressourcer i processen med de andre tråde. (se figur \ref{fig:1})
 
@@ -62,7 +62,15 @@ Dette gør det nemmere og hurtigere end at oprette en ny process. Hurtigere ford
 pthread_create(&tid, NULL, method, args);
 \end{lstlisting}
 
-hvor tid er trådens id, NULL bliver sat fordi vi vil køre den med standard indstillinger, method er metoden vi gerne vil køre og args er de argumenter der skal gives til metoden. Metoder der køres skal have typen textit{void *} og argumentet og parmetre skal også have typen \textit{void *}.
+hvor tid er trådens id, NULL bliver sat fordi vi vil køre den med standard indstillinger, method er metoden vi gerne vil køre og args er de argumenter der skal gives til metoden. Metoder der køres skal have typen \textit{void *} og argumentet og parmetre skal også have typen \textit{void *}. Neden for ses den struct vi bruger til at holde input parameteren til vores metode.
+
+\begin{lstlisting}
+typedef struct _runnerargs {
+        int start;
+        int end;
+        double *sum;
+} Runnerargs;
+\end{lstlisting}
 
 For at kunne vente på en tråd bliver færdig, for eksempel hvis vi har brug for et resultat, kan vi bruge 
 
@@ -71,14 +79,14 @@ pthread_join(&tid, NULL);
 \end{lstlisting}
 
 
-For at kunne køre udregningen i parallel skal vi kunne opdele beregningen til mindre udregninger der kan køres parallelt og tilsidst så lægges sammen. 
+For at kunne køre udregningen i parallel skal vi kunne opdele beregningen til mindre udregninger. Det kan vi gøre fordi følgende gælder.
 
 \begin{equation*}
-sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} = \displaystyle\sum\limits_{j=0}^{p} \left( \displaystyle\sum\limits_{i=\frac{j}{p}+1}^{\frac{n}{p}} \sqrt{i} \right), \frac{n}{p} \in \mathbb{N} \text{ hvor } p \text{ lig antallet af tråde}
+sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} = \sqrt{0} + \displaystyle\sum\limits_{j=0}^{p} \left( \displaystyle\sum\limits_{i=\frac{n}{p}*j+1}^{\frac{n}{p}} \sqrt{i} \right), \frac{n}{p} \in \mathbb{N} \text{ hvor } p \text{ lig antallet af tråde}
 \end{equation*}
 
 
-Det har vi gjort med følgende algoritme.
+Vi har implementeret dette med følgende kode stykke.
 
 \begin{lstlisting}
 int cut, last = 0, threadsleft = nthreads;
@@ -102,7 +110,7 @@ for(int i = 0; i < nthreads; i++){
 }
 \end{lstlisting}
 
-Vi deler altså mængden vi skal udregne med antal tråde der mangler at blive startet og trækker den mængden fra den samlede mængde. På den måde sørger vi altid for at udregne hele mængden selvom den ikke kan deles lige med antal tråde. 
+For at undgå at $\frac{n}{p}$ skal være et naturligt tal deler vi mængden vi skal udregne med antal tråde der mangler at blive startet og trækker den mængden fra den samlede mængde. På den måde sørger vi altid for at udregne hele mængden selvom den ikke kan deles med antal tråde. 
 
 Til sidst venter vi på at alle trådene er færdige med at beregne og lægger resultaterne sammen.
 
@@ -114,9 +122,177 @@ for(int i = 0; i < nthreads; i++){
 }
 \end{lstlisting}
 
+Vi har testet det på en computer med fire kerner (se figure \ref{fig:3}) og der ses det tydeligt køretiden forbedres når man kører ligeså mange, eller flere, tråde som computeren har kerner.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.4]{img/3.png}
+\caption{Speed-up graf}
+\label{fig:3}
+\end{center}
+\end{figure}
+
 \chapter{Multitrådet FIFO buffer som kædet liste}
 \chapter{Producer-Consumer med bounded buffer}
 \chapter{Banker’s algorithm til håndtering af deadlock}
+
+Banker's algoritme bruges til at afgøre om der kan opstå deadlocks. Deadlock er et stadie hvor tråd A venter på tråd B og tråd B venter på tråd A der derfor begge vil vente uendeligt. Se figure \ref{fig:2}. Samme problem stilling gælder også for en kæde hvor A venter på B der venter på C der venter på A, altså når der er en cyklus.
+
+Banker's algoritmen kan bruges hvis man på forhånd kender processens maks resurse forbrug og hvis processer når den har alle sine resurser returnerer dem i endelig tid. Ud over det virker den kun for et statisk antal processer.
+
+
+Algoritmen sørger for at før en process bliver tildelt resurser checker systemet om tildelingen vil kunne føre til en usikker tilstand. Hvis tilstanden er sikker bliver resurserne tildelt, ellers bliver processen tvunget til at vente til at den kan få tildelt resurserne i en sikker tilstand.
+
+Til det har vi en vektor til at holde styr på hvor mange resurser der er tilgængelige (available) og tre matriser til at holde styr, for hver process, for mange resurser den maksimalt bruger (max), nuværende har allokeret (allocated) og hvor mange den mangler for at blive færdig (need).
+
+Da vi gerne dynamisk vil kunne oprette matriserne bruger vi \textit{malloc} 
+til at reservere plads på hoben. Neden for ses metoden \textit{alloc\_memory} som vi bruger til at reservere plads til vores matriser. 
+
+\begin{lstlisting}
+/* Allocate memory needed for runtime */
+void alloc_memory(){
+        s = (State *) malloc(2 * sizeof(int *) + 3 * sizeof(int **));
+        s -> resource   =       malloc(n* sizeof(int));
+        s -> available  =       malloc(n * sizeof(int));
+        s -> max        =       malloc(m * sizeof(int *));
+        s -> need       =       malloc(m * sizeof(int *));
+        s -> allocation =       malloc(m * sizeof(int *));
+
+        work            =       malloc(n * sizeof(int));
+        finish          =       malloc(m * sizeof(int));
+
+        for(int i = 0; i < m; i++){
+                s -> max[i] = malloc(n * sizeof(int));
+                s -> need[i] = malloc(n * sizeof(int));
+                s -> allocation[i] = malloc(n * sizeof(int));
+        }
+}
+\end{lstlisting}
+
+På samme måde bruger vi \textit{free\_memory} metoden  til at frigive pladsen igen når vi er færdige med den.
+\begin{lstlisting}
+/* free memory allocation during runtime */
+void free_memory(){
+        for(int i = 0; i < m; i++){
+                free(s -> max[i]);
+                free(s -> need[i]);
+                free(s -> allocation[i]);
+        }
+        free(s -> max);
+        free(s -> need);
+        free(s -> allocation);
+        free(s -> available);
+        free(s -> resource);
+        free(finish);
+        free(work);
+        free(s);
+}
+\end{lstlisting}
+
+Når vi har allokeret vektorerne og matriserne og defineret nogle processer, resurser og deres tilhørende værdier kan vi tjekke om de til at starte med er i en sikker tilstand. Det gør vi med følgende kode.
+
+\begin{lstlisting}
+/* Bankers safty algorithm */
+int safety_check(){
+        /* Set work = available */
+        for(int i = 0; i < n; i++){
+                work[i] = s->available[i];
+        }
+
+        /* set Finish[i] = false for all i */
+        for(int i = 0; i < m; i++){
+                finish[i] = 0;
+        }
+
+        /* If finish[i] == false and need[i] <= work then allocate, set finish[i] to true and restart loop */
+        for(int i = 0; i < m; i++){
+                if(finish[i] == 0 && slarger(s->need[i], work, n)){
+                        addarr(work, s->allocation[i], n);
+                        finish[i] = 1;
+                        i = 0;
+                }
+        }
+
+        /* if any element in finish == false return 0, else return 1  */
+        for(int i = 0; i < m; i++){
+                if(finish[i] == 0) return 0;
+        }
+        return 1;
+}
+\end{lstlisting}
+
+
+Når en process requester resurser tildeler vi resurserne, tjekker om det ender i en sikker tilstand, og hvis ikke får vi den til at vente til en sikker tilstand opstår.
+
+\begin{lstlisting}
+/* Allocate resources in request for process i, only if it
+   results in a safe state and return 1, else return 0 */
+int resource_request(int i, int *request)
+{
+        //Checking if the request exceeds the max need
+        if(!slarger(request, s->need[i], n)){
+                printf("ERROR!\n");
+                exit(1);
+        }
+
+        /* Aquire lock for state */
+        pthread_mutex_lock(&state_mutex);
+
+        /* if request > avalible then return 0*/
+        if(!slarger(request, s->available, n)){
+                pthread_mutex_unlock(&state_mutex);
+                return 0;
+        }
+
+        /* Allocate resources */
+        subarr(s->available, request, n);
+        addarr(s->allocation[i], request, n);
+        subarr(s->need[i], request, n);
+
+        /* Check if safe state else reverse allocation and return 0 */
+        if(!safety_check()){
+                addarr(s->available, request, n);
+                subarr(s->allocation[i], request, n);
+                addarr(s->need[i], request, n);
+                pthread_mutex_unlock(&state_mutex);
+                return 0;
+        }
+
+        /* Release lock for state */
+        pthread_mutex_unlock(&state_mutex);
+        return 1;
+}
+\end{lstlisting}
+
+På denne måde kan vi sikre at en proces kun bliver tildelt resurser hvis det resulterer i en sikker tilstand.
+
+Gennem vores tests fandt vi et problem med den allerede implementerede metode \textit{generate\_release} og problemet ligger i den måde det frigiver ressourcer på
+
+\begin{lstlisting}
+/* Generate a release vector */
+void generate_release(int i, int *request)
+{
+        int j, sum = 0;
+        while (!sum) {
+                for (j = 0;j < n; j++) {
+                        request[j] = s->allocation[i][j] * ((double)rand())/ (double)RAND_MAX;
+                        sum += request[j];
+                }
+        }
+        printf("Process %d: Releasing resources.\n",i);
+}
+\end{lstlisting}
+
+Denne metode terminer kun hvis request vektoren bliver allokeret forskelligt fra $[0,0,0]$, men hvis allocation veltoren er $[0,0,1]$ eller en anden kombination af de to tal er det meget usandsynligt at metoden teminerer. \textit{((double)rand())/ (double)RAND\_MAX} returnere et tal mellem $0$ og $1$, men da allocation vektoren er $[0,0,1]$ vil sum kun overstige $0$ hvis det tilfældige tal er \textit{RAND\_MAX} da tallet ellers vil blive nedrundet til $0$ hvilket gør at metoden aldrig (usandsynligt) terminer. Samme problem gælder for \textit{generate\_request} metoden hvis need vektoren indeholder kun $0$ og $1$.
+
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.4]{img/2.png}
+\caption{Figure der viser en deadlock}
+\label{fig:2}
+\end{center}
+\end{figure}
 
 
 \end{document}          
