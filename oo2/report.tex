@@ -1,0 +1,243 @@
+\documentclass[danish]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[danish]{babel}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{courier}
+\usepackage{parskip}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+  frame=,
+  language=C,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=4
+}
+
+% Title Page
+\title{Obligatorisk opgave 1}
+\author{Jacob B. Cholewa \& Mathias Kindsholm }
+
+
+\begin{document}
+\maketitle
+
+
+
+\section{Punkt 2.2}
+
+Der kan opstå raceconditions i de metoder der laver opearationer på listen
++++ Uddyb +++ 
+
+
+\section{Feature 2}
+
+For at en bruger kan bruge kommandoerne {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver på vores Ubuntu installation. Vi leder i mapperne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Dette gør {\tt execvp} dog selv, men vi checker stadig til at starte med at filerne findes i disse mapper. Hvis filen er blevet fundet returneres {\tt 1} ({\tt true}), hvis ikke returneres {\tt 0} ({\tt false}). Hvis kommandoen {\tt exit} blev fundet returneres {\tt -1}. Kode stykket ses her under. Status koderne bliver tolket til eventuelle fejlbeskeder i vores executeshellcmd metode.
+
+\begin{lstlisting}
+int isValidCmd(char **cmd){
+    if(strncmp(*cmd,"exit",4) == 0) return -1;
+
+    char str1[100];
+    char str2[100];
+    char str3[100];
+
+    char *path1 = "/bin/";
+    char *path2 = "/usr/bin/";
+    char *path3 = "./";
+
+    strcpy(str1,path1);
+    strcat(str1, *cmd);
+    strcpy(str2,path2);
+    strcat(str2, *cmd);
+    strcpy(str3,path3);
+    strcat(str3, *cmd);
+
+    return 
+        access ( str1, F_OK ) != -1 || 
+        access ( str2, F_OK ) != -1 || 
+        access ( str3, F_OK ) != -1;
+}
+\end{lstlisting}
+
+
+\section{Feature 3}
+
+Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. I shellcmd structen vil feltet {\tt background} være sat til {\tt 1} ({\tt true}) hvis processen skal køres som en baggrundsproces. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}).
+\begin{lstlisting}
+int executeshellcmd(Shellcmd *shellcmd){
+    
+
+    ... code to check shellcmd
+
+    pid_t pid = fork();
+    if(pid == 0){
+           ... Code executing shellcmd
+    }else{
+        if(shellcmd -> background == 0){
+            int wstatus = 0;    
+            waitpid(pid,&wstatus,0);
+        }
+    }
+    return 0;
+}
+\end{lstlisting}
+
+\section{Feature 4}
+
+Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på venstre side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra venstre side. eg {\tt cmd < file}. Dette har vi løst med følgende logik.
+
+\begin{lstlisting}
+if(in == NULL && out == NULL){
+                status = executecmd(cmdlist);
+            }else{
+                if(in != NULL && out != NULL) status = redirInOut(in, out, cmdlist);
+                if(in != NULL) status = redirIn(in, cmdlist);
+                if(out != NULL) status = redirOut(out, cmdlist);
+            }
+\end{lstlisting}
+
+som bruger følgende hjælpe metoder.
+
+\begin{lstlisting}
+// redirect in and out
+int redirInOut(char *inFile, char *outFile, Cmd *cmdlist){
+    
+    int fidIn  = open(inFile, O_RDONLY);
+    int fidOut = open(outFile, O_WRONLY | O_CREAT | O_APPEND);              
+    close(0); close(1);
+    dup(fidIn); dup(fidOut);
+    int status = executecmd(cmdlist);
+    close(fidIn); close(fidOut);
+    if(status != 0) 
+        printf("execvp returned: %i, errno returned: %i 'no such file or directory' \n", status, errno);
+
+}
+
+// redirect in
+int redirIn(char *inFile, Cmd *cmdlist){
+    int fid = open(inFile, O_RDONLY);  
+    close(0); // close standard input
+    dup(fid);   // 'duplicate fileid', opens another input (file)    
+    int status = executecmd(cmdlist);
+    close(fid);             
+    if(status != 0) 
+        printf("execvp returned: %i, errno returned: %i 'no such file or directory' \n", status, errno);
+
+
+}
+
+// redirect out
+int redirOut(char *outFile, Cmd *cmdlist){
+    int fid = open(outFile, O_WRONLY | O_CREAT | O_APPEND);         
+    close(1); // close standard output
+    dup(fid); // duplicate file-descriptor
+
+    int status = executecmd(cmdlist);
+    close(fid);             
+    if(status != 0) 
+        printf("execvp returned: %i, errno returned: %i 'no such file or directory' \n", status, errno);
+
+}
+\end{lstlisting}
+
+
+
+
+
+\section{Feature 5}
+
+En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. eg {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. Vi har i vores shell implementeret dette med følgende logik. Denne metode kaldes af de metoder som var vist i feature 4.
+
+\begin{lstlisting}
+int executecmd(Cmd *cmdlist){
+    int status;
+    char **cmd = cmdlist -> cmd;
+    Cmd *next = cmdlist -> next;
+    if(next != NULL){
+
+        int fd[2];
+        pipe(fd);
+
+        pid_t pid = fork();
+        if(pid == 0){
+            close(fd[0]);
+            close(1);
+            dup(fd[1]);
+            close(fd[1]);
+            status = executecmd(next);
+        }else{
+            close(fd[1]);
+            close(0);
+            dup(fd[0]);
+            close(fd[0]);
+            status = execvp(*cmd,cmd);
+            
+            int wstatus;
+            waitpid(pid,&wstatus,0);
+        }
+    }else{
+        status = execvp(*cmd,cmd);
+    }
+    return status;
+}
+
+\end{lstlisting}
+
+\section{Feature 6}
+
+%Denne funktion er allerede forklaret som en del af feature 6. 
+
+I 'executeshellcmd' samler vi alle commands og sender dem til funktionen 'isValidCmd' for validering (unødvendigt, da execute funktionerne allerede returnerer -1 hvis en command ikke findes). Som sagt under Feature 2 returnerer denne funktion -1 Hvis 'exit' er en command. 'executeShellCmd' returnerer så umiddelbart 1 til 'main' metoden. Dermed terminerer while loopet i 'main' og vores shell slutter. 
+
+I executeShellCmd() samler vi alle commands og sender dem til validering. Hvis status er -1 returnerer vi fra funktionen.
+
+\begin{lstlisting}
+while( cmdlist != NULL){
+	char **cmd = cmdlist -> cmd;
+	cmdlist = cmdlist -> next;
+	status = isValidCmd(cmd);
+
+	if(status == 0){ 
+		printf("%s: command not found\n", *cmd );
+		return 0;
+	}
+	if(status == -1) return 1;
+}
+\end{lstlisting}
+
+I isValidCmd() returnerer vi -1 hvis 'exit' er en command.
+\begin{lstlisting}
+int isValidCmd(char **cmd){
+	
+	if(strncmp(*cmd,"exit",4) == 0) return -1;
+\end{lstlisting}
+
+I main(). Terminering af while loopet afslutter vores shell. 
+\begin{lstlisting}
+/* parse commands until 'exit' command, then exit */
+while (!terminate) {
+	terminate = executeshellcmd(&shellcmd);
+\end{lstlisting}
+
+\section{Feature 7}
+
+Denne feature nåede ikke at blive implementeret i vores {\tt BOSH} shell.
+
+
+\end{document}          
