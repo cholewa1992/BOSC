@@ -1,16 +1,16 @@
-all: fifo
+all: pc
 
-OBJS = list.o main.o
+OBJS = list.o pc.o
 LIBS = -pthread -std=c99
 
-fifo: ${OBJS}
+pc: ${OBJS}
 	gcc -o $@ ${LIBS} ${OBJS}
 
-main.o: main.c
-	gcc -c ${LIBS} main.c
+pc.o: pc.c
+	gcc -c ${LIBS} pc.c
 
 list.o: list.c
 	gcc -c ${LIBS} list.c
 
 clean:
-	rm -rf *o fifo
+	rm -rf *o pc 
