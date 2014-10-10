@@ -33,7 +33,7 @@
 }
 
 % Title Page
-\title{Obligatorisk opgave 1}
+\title{Obligatorisk opgave 2}
 \author{Jacob B. Cholewa \& Mathias Pedersen }
 
 
@@ -125,11 +125,11 @@ for(int i = 0; i < nthreads; i++){
 Vi har testet det på en computer med fire kerner (se figure \ref{fig:3}) og der ses det tydeligt køretiden forbedres når man kører ligeså mange, eller flere, tråde som computeren har kerner.
 
 \begin{figure}[H]
-\begin{center}
-\includegraphics[scale=0.4]{img/3.png}
+%\begin{center}
+\includegraphics[width=\linewidth]{img/3.png}
 \caption{Speed-up graf}
 \label{fig:3}
-\end{center}
+%\end{center}
 \end{figure}
 
 \chapter{Multitrådet FIFO buffer som kædet liste}
@@ -137,7 +137,7 @@ I denne opgave arbejder vi med implementeringen af en trådsikker kædet liste d
 
 En kædet liste består af elementer der peger på næste element i listen. Den adskiller sig altså fra et array ved ikke at skulle ligge sekventielt i hukommelsen og i det at den ikke har en fast længde(og krævet hukommelse).
 
-Det første skridt er at færdiggøre implementeringen af den givne kode: list_add() og list_remove(). Listen vi vil implementere er en FIFO, First In First Out. Det vil altså sige at når vi indsætter i listen skal det nye element på første plads. Det opnås på følgende måde:
+Det første skridt er at færdiggøre implementeringen af den givne kode: \textit{list\_add()} og \textit{list\_remove()}. Listen vi vil implementere er en FIFO, First In First Out. Det vil altså sige at når vi indsætter i listen skal det nye element på første plads. Det opnås på følgende måde:
 
 \begin{lstlisting}    
 /* list_add: add node n to list l as the last element */
@@ -183,7 +183,7 @@ Afslutningsvist, for at teste at dette virker, har vi lavet en stress test: Et p
 
 I denne opgave implementerer vi et producer-consumer system med fælles buffer i form af listen fra forrige opgave. Systemet skal tage argumenter i form af antallet af producers, antallet af consumers, størrelsen af den delte buffer, samt antallet af produkter der i alt skal produceres.
 
-Ud fra argumenterne vil der blive oprettet et vis antal tråde til producers og consumers. Hver tråd kører hhv. funktionen producer() og consumer() som ses fuldt implementeret herunder.
+Ud fra argumenterne vil der blive oprettet et vis antal tråde til producers og consumers. Hver tråd kører hhv. funktionen \textit{producer()} og \textit{consumer()} som ses fuldt implementeret herunder.
 
 Hver tråd kører i et while true loop. Vores krav er at en producer ikke må putte flere produkter i bufferen end den givne størrelse, og at den ikke må producere flere produkter end maximum. En consumer skal vente på at der er noget i listen.
 
