@@ -133,7 +133,106 @@ Vi har testet det på en computer med fire kerner (se figure \ref{fig:3}) og der
 \end{figure}
 
 \chapter{Multitrådet FIFO buffer som kædet liste}
+I denne opgave arbejder vi med implementeringen af en trådsikker kædet liste der i næste opgave vil blive brugt som FIFO buffer.
+
+En kædet liste består af elementer der peger på næste element i listen. Den adskiller sig altså fra et array ved ikke at skulle ligge sekventielt i hukommelsen og i det at den ikke har en fast længde(og krævet hukommelse).
+
+Det første skridt er at færdiggøre implementeringen af den givne kode: list_add() og list_remove(). Listen vi vil implementere er en FIFO, First In First Out. Det vil altså sige at når vi indsætter i listen skal det nye element på første plads. Det opnås på følgende måde:
+
+\begin{lstlisting}    
+/* list_add: add node n to list l as the last element */
+void list_add(List *l, Node *n)
+{
+	n -> next = l -> first;
+	l -> first = n;
+	l -> len++;
+}
+\end{lstlisting}
+
+I remove funktionen tager vi igen første element, fjerner det fra listen og returnere en pointer til elementet. Helt specifikt fjernes elementet fra listen ved først at gemme en pointer til elementet, så at sætte listens første element til det udtaget elements næste, og til sidst tælle længden af listen en ned.
+
+\begin{lstlisting}    
+/* list_remove: remove and return the first (non-root) element from list l */
+Node *list_remove(List *l)
+{
+	if(l -> len <= 0) return NULL;
+
+	Node *n = l -> first;
+	l -> first = n -> next;
+	l -> len--;
+
+	return n;
+}
+\end{lstlisting}
+
+Det næste skridt i opgaven er at gøre listen trådsikker. Scenariet er at vi har flere tråde der arbejder på samme liste element i hukommelsen. Vi vil gerne sikre at to eller flere tråde ikke kommer i racecondition når de arbejder med de overstående funktioner. En kædet liste er meget skrøbelig da en pointer er livslinjen til at få fat i resten af listen, og hvis flere tråde brugte overstående funktioner kunne det gå galt. Løsningen er at bruge mutex låse.
+
+I vores implementation bruger vi pthread's mutex, som er et objekt vi binder til listen. På den måde har hver liste i hukommelsen et mutex. Mutex'et locker vi i starten af hhv. add og remove funktionerne, og unlocker i slutningen. Koden ind i mellem er altså vores critical section, som afhænger af to ting. Først arbejder vi med værdier som kun en tråd må arbejde på. Derfor bruger vi samme mutex i funktionerne der arbejder med disse variabler. Dernæst vil vi også gerne have at ændringerne i en given critical section sker i træk uden at en anden tråd byder ind i mellem.
+
+
+\begin{lstlisting}    
+pthread_mutex_lock(&l->mutex);
+//CRITICAL SECTION
+pthread_mutex_unlock(&l->mutex);
+\end{lstlisting}
+
+Afslutningsvist, for at teste at dette virker, har vi lavet en stress test: Et program der opretter et givent antal tråde som alle arbejder på samme liste. De tilføjer og fjerner alle 100 elementer konstant. Listen uden mutex crasher hurtigt og den med mutex kører fint.
+
+
 \chapter{Producer-Consumer med bounded buffer}
+
+I denne opgave implementerer vi et producer-consumer system med fælles buffer i form af listen fra forrige opgave. Systemet skal tage argumenter i form af antallet af producers, antallet af consumers, størrelsen af den delte buffer, samt antallet af produkter der i alt skal produceres.
+
+Ud fra argumenterne vil der blive oprettet et vis antal tråde til producers og consumers. Hver tråd kører hhv. funktionen producer() og consumer() som ses fuldt implementeret herunder.
+
+Det første krav til disse funktioner er at når et produkt produceres eller konsumeres skal den givne tråd sove i et tidsinterval af tilfældig længde.
+
+\begin{lstlisting}    
+void *producer(void *args){
+	int nr = args;
+	while(1){
+	
+		/* Incrementing produced with symaphore psem */
+		sem_wait(&psem); //waiting for the given symaphore
+		if(++produced > np){ //Incrementing *p and checking if the value is less than the maximum amount of products
+			sem_post(&psem); //Releasing the lock before returning
+			return 0; //Exiting the producer
+		}
+		sem_post(&psem); //Adding to the psem symaphore
+		
+		sem_wait(&empty); //Waiting if the list is full
+		Node *n = node_new_str("string");
+		list_add(buffer, n);
+		printf("Producer %i produced %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
+		sem_post(&full); //Adding to the full symaphore
+		rsleep(500); //Waiting a for a random range of 0 and 2*500ms
+	}
+}
+\end{lstlisting}
+
+\begin{lstlisting}    
+void *consumer(void *args){
+	int nr = args;
+	while(1){
+	
+		/* Incrementing consumed with symaphore csem */
+		sem_wait(&csem); //waiting for the given symaphore
+		if(++consumed > np){ //Incrementing *p and checking if the value is less than the maximum amount of products
+			sem_post(&csem); //Releasing the lock before returning
+			return 0; //Exiting the consumer
+		}
+		sem_post(&csem); //Adding to the csem symaphore
+		
+		sem_wait(&full); //Waiting if list is empty
+		Node *n = list_remove(buffer);
+		printf("Consumer %i consumed %s. Items in buffer: %i (out of %i)\n",nr,n->elm,buffer->len,buffer_size);
+		sem_post(&empty); //Adding to the empty symaphore
+		rsleep(500); //Waiting a for a random range of 0 and 2*500ms
+	}
+}
+\end{lstlisting}
+
+
 \chapter{Banker’s algorithm til håndtering af deadlock}
 
 Banker's algoritme bruges til at afgøre om der kan opstå deadlocks. Deadlock er et stadie hvor tråd A venter på tråd B og tråd B venter på tråd A der derfor begge vil vente uendeligt. Se figure \ref{fig:2}. Samme problem stilling gælder også for en kæde hvor A venter på B der venter på C der venter på A, altså når der er en cyklus.
