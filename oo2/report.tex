@@ -185,7 +185,7 @@ I denne opgave implementerer vi et producer-consumer system med fælles buffer i
 
 Ud fra argumenterne vil der blive oprettet et vis antal tråde til producers og consumers. Hver tråd kører hhv. funktionen producer() og consumer() som ses fuldt implementeret herunder.
 
-Det første krav til disse funktioner er at når et produkt produceres eller konsumeres skal den givne tråd sove i et tidsinterval af tilfældig længde.
+Hver tråd kører i et while true loop. Vores krav er at en producer ikke må putte flere produkter i bufferen end den givne størrelse, og at den ikke må producere flere produkter end maximum. En consumer skal vente på at der er noget i listen.
 
 \begin{lstlisting}    
 void *producer(void *args){
@@ -231,6 +231,16 @@ void *consumer(void *args){
 	}
 }
 \end{lstlisting}
+
+For at sikre at kravene bliver overholdt bruges semaforer. Et semafor er et heltal og kan enten bruges som mutex(0 eller 1), eller som tællesemafor. I vores implementation bruges semaforerne som tællere til at overholde disse kravene. Vi bruger altså først og fremmest to semaforer: \textit{empty, full}, som initialiseres på følgende måde:
+
+\begin{lstlisting}    
+/* Initializing semaphores */
+sem_init(&empty, 0, buffer_size);
+sem_init(&full, 0, 0);
+\end{lstlisting}
+
+Vi bruger semaforerne i to funktioner; sem_wait() og sem_post(). I wait tjekkes semaforet, og hvis det er over 0 trækkes 1 fra, ellers blokeres tråden. I post lægges der 1 til semaforet, og hvis det er lig med 0 låses det op. Produceren waiter altså på empty, som initialiseres med buffer_size, hvilket trækker 1 fra. Det vil sige at hvis empty er 0, vil der ikke blive produceret, da listen er fuld. Hvis produceren får lov at producere slutter den med at poste på semaforet full
 
 
 \chapter{Banker’s algorithm til håndtering af deadlock}
