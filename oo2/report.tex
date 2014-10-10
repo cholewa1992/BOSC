@@ -1,4 +1,4 @@
-﻿\documentclass[danish]{report}
+\documentclass[danish]{report}
 
 \usepackage[utf8]{inputenc}
 \usepackage[danish]{babel}
@@ -169,6 +169,8 @@ Det næste skridt i opgaven er at gøre listen trådsikker. Scenariet er at vi h
 
 I vores implementation bruger vi pthread's mutex, som er et objekt vi binder til listen. På den måde har hver liste i hukommelsen et mutex. Mutex'et locker vi i starten af hhv. add og remove funktionerne, og unlocker i slutningen. Koden ind i mellem er altså vores critical section, som afhænger af to ting. Først arbejder vi med værdier som kun en tråd må arbejde på. Derfor bruger vi samme mutex i funktionerne der arbejder med disse variabler. Dernæst vil vi også gerne have at ændringerne i en given critical section sker i træk uden at en anden tråd byder ind i mellem.
 
+Herunder ses hvordan man kan låse en kritisk sektion og vi bruger dette til at låse vores \textit{list\_add()} og \textit{list\_remove()} da disse er kritiske sektioner. 
+
 
 \begin{lstlisting}    
 pthread_mutex_lock(&l->mutex);
@@ -240,7 +242,7 @@ sem_init(&empty, 0, buffer_size);
 sem_init(&full, 0, 0);
 \end{lstlisting}
 
-Vi bruger semaforerne i to funktioner; \textit{sem\_wait()} og \textit{sem\_post()}. I wait tjekkes semaforet, og hvis det er over 0 trækkes 1 fra, ellers blokeres tråden. I post lægges der 1 til semaforet, og hvis det er lig med 0 låses det op. Produceren waiter altså på empty, som initialiseres med \texit{buffer\_size}, hvilket trækker 1 fra. Det vil sige at hvis empty er 0, vil der ikke blive produceret, da listen er fuld. Hvis produceren får lov at producere slutter den med at poste på semaforet full hvilket vil tælle den en op, og evt. vække consumer tråde der venter på produkter. Consumeren venter på full der beskriver antal produkter i bufferen, og slutter med at poste på empty, hvilket tæller den en op, og evt. vækker producere tråde der venter på at måtte producere.
+Vi bruger semaforerne i to funktioner, \textit{sem\_wait()} og \textit{sem\_post()}. I wait tjekkes semaforet, og hvis det er over 0 trækkes 1 fra, ellers blokeres tråden. I post lægges der 1 til semaforet. Produceren waiter altså på empty, som initialiseres med \textit{buffer\_size}, hvilket trækker 1 fra. Det vil sige at hvis empty er 0, vil der ikke blive produceret, da listen er fuld. Hvis produceren får lov at producere slutter den med at poste på semaforet full hvilket vil tælle den en op, og evt. vække consumer tråde der venter på produkter. Consumeren venter på full der beskriver antal produkter i bufferen, og slutter med at poste på empty, hvilket tæller den en op, og evt. vækker producere tråde der venter på at måtte producere.
 
 De to sidste semaforer, \textit{csem og psem}, bruger vi som mutexes, for at undgå at der opstår raceconditions når consumed og produced tælles op, da denne operation ikke er atomisk. Vi er nød til at holde styr på hvor mange produkter der er produced og consumed for på rigtig vis at afslutte produktionen ved det givne maximum.
 
