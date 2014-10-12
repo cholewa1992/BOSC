@@ -1,4 +1,4 @@
-﻿\documentclass[danish]{report}
+\documentclass[danish]{report}
 
 \usepackage[utf8]{inputenc}
 \usepackage[danish]{babel}
@@ -36,11 +36,12 @@
 \title{Obligatorisk opgave 2}
 \author{Jacob B. Cholewa \& Mathias Pedersen }
 
+\chapter{Introduktion}
 
 \begin{document}
 \maketitle
 \chapter{Multitrådet sum}
-På en multicore processror kan vi kører instruktioner i parallel. Det vil vi i denne opgave udnytte til hurtigere at udregne $ sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} $.
+På en multicore processror kan vi køre instruktioner i parallel. Det vil vi i denne opgave udnytte til hurtigere at udregne $ sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} $.
 
 Først vil vi beskrive hvordan man kører ting i parallel. Vi bruger biblioteket pthread som bruger linux kernes POSIX kald. En tråd har hver sin stack, process nummer, program counter og register, men deler de andre ressourcer i processen med de andre tråde. (se figur \ref{fig:1})
 
@@ -404,6 +405,10 @@ Denne metode terminer kun hvis request vektoren bliver allokeret forskelligt fra
 \label{fig:2}
 \end{center}
 \end{figure}
+
+
+\chapter{Reflektion}
+\chapter{Konklusion}
 
 
 \end{document}          
