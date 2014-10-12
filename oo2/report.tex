@@ -37,6 +37,10 @@
 \author{Jacob B. Cholewa \& Mathias Pedersen }
 
 \chapter{Introduktion}
+I denne rapport arbejdes med anden obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som parallel processering, mutex låsning, semaforer og Bankers algoritme til deadlock håndtering.
+
+\chapter{Metode}
+I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
 
 \begin{document}
 \maketitle
@@ -252,7 +256,7 @@ De to sidste semaforer, \textit{csem og psem}, bruger vi som mutexes, for at und
 
 Banker's algoritme bruges til at afgøre om der kan opstå deadlocks. Deadlock er et stadie hvor tråd A venter på tråd B og tråd B venter på tråd A der derfor begge vil vente uendeligt. Se figure \ref{fig:2}. Samme problem stilling gælder også for en kæde hvor A venter på B der venter på C der venter på A, altså når der er en cyklus.
 
-Banker's algoritmen kan bruges hvis man på forhånd kender processens maks resurse forbrug og hvis processer når den har alle sine resurser returnerer dem i endelig tid. Ud over det virker den kun for et statisk antal processer.
+Banker's algoritmen kan bruges hvis man på forhånd kender processens maks resurseforbrug og hvis processer, når de har alle deres resurser, returnerer dem i endelig tid. Ud over det virker den kun for et statisk antal processer.
 
 
 Algoritmen sørger for at før en process bliver tildelt resurser checker systemet om tildelingen vil kunne føre til en usikker tilstand. Hvis tilstanden er sikker bliver resurserne tildelt, ellers bliver processen tvunget til at vente til at den kan få tildelt resurserne i en sikker tilstand.
@@ -410,7 +414,12 @@ Denne metode terminer kun hvis request vektoren bliver allokeret forskelligt fra
 
 
 \chapter{Reflektion}
+
+
 \chapter{Konklusion}
+
+Alle de stillede opgaver er løst og beskrevet i denne rapport, og i en grad der har givet og godt indblik i teorien og implementering med C.
+
 
 
 \end{document}          
