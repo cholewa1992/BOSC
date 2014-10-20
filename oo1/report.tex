@@ -37,10 +37,11 @@
 \begin{document}
 \maketitle
 
-
-\section{Introduktion}
+\chapter{Introduktion}
 Denne rapport omhandler implementationen af vores shell BOSC. Specifikationerne er som følger.
 
+
+\section{Features}
 \begin{enumerate}
 \item bosh skal kunne virke uafhængigt. Du må ikke bruge andre eksisterende shells, f.eks. er det ikke tilladt at anvende et systemkald {\tt system()} til at starte {\tt bash}.
 \item En bruger skal kunne indtaste almindelige enkeltstående kommandoer, så som {\tt ls}, {\tt cat} og {\tt wc}. Hvis kommandoen ikke findes i operativ systemet skal der udskrives en ”Command not found“ meddelelse.
@@ -53,6 +54,8 @@ Denne rapport omhandler implementationen af vores shell BOSC. Specifikationerne 
 
 Følgende vil handle om vores implementation af disse features 
 
+
+\chapter{Implementation og teori}
 \section{Feature 1}
 
 Vi håndterer brugerens input uden brug af andre shells. F.e.ks bruger vi ikke {\tt system()} til at starte {\tt bash} eller til andre system kald. 
@@ -252,5 +255,5 @@ while (!terminate) {
 
 Denne feature nåede ikke at blive implementeret i vores {\tt BOSH} shell.
 
-
+\chapter{Konklusion}
 \end{document}          
