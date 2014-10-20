@@ -1,0 +1,7 @@
+exit
+
+in 'executeshellcmd' we run through all the commands sending each to the function 'isValidCmd'. This function immediately compares a command to the string 'exit' and returns -1 to 'executeShellCmd (if exit is found). executeShellCmd then returns 1 to the main method. main then exits its while loop ending the shell.
+
+
+
+  
