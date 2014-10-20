@@ -41,8 +41,8 @@
 \newpage
 
 \chapter{Introduktion}
-Denne rapport omhandler implementationen af vores shell BOSC. Specifikationerne er som følger.
 
+I denne rapport vil vi beskrive hvordan vi har implementeret vores version af Shellen BOSC og den teori der ligger til grund for denne implementation. Rapporten er opdelt i tre sektioner, en introduktion, et implementations og teori afsnit og til sidste en konklusion. Næste sektion indeholder kravene til vores Shell.  
 
 \section{Features}
 \begin{enumerate}
@@ -59,45 +59,29 @@ Følgende vil handle om vores implementation af disse features
 
 
 \chapter{Implementation og teori}
-\section{Feature 1}
-
-Vi håndterer brugerens input uden brug af andre shells. F.e.ks bruger vi ikke {\tt system()} til at starte {\tt bash} eller til andre system kald. 
-
-
-\section{Feature 2}
-
-For at en bruger kan bruge kommandoerne {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver på vores Ubuntu installation. Vi leder i mapperne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Dette gør {\tt execvp} dog selv, men vi checker stadig til at starte med at filerne findes i disse mapper. Hvis filen er blevet fundet returneres {\tt 1} ({\tt true}), hvis ikke returneres {\tt 0} ({\tt false}). Hvis kommandoen {\tt exit} blev fundet returneres {\tt -1}. Kode stykket ses her under. Status koderne bliver tolket til eventuelle fejlbeskeder i vores executeshellcmd metode.
+\section{Feature 1 og 2}
+Første krav til vores shell er at vi ikke bruger andre shells til at få vores shell eller systemkald til at virke. Det skal altså være et selvstående program. En shell er en grafisk brugergrænseflade der tillader brugeren at inputte og køre programmer. Shellen er altså en process der kan starte andre programmer som processer. For at en bruger kan eksekvere programmer på maskinen så som {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver. Vi har skrevet vores shell til linux systemer, og vi leder derfor efter det inputtede program i mapperne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Hvis vi finder programmet som brugeren prøver at starte bruger vi vi det indbyggede program i linux {\tt execvp}. {\tt execvp} programmet tager en process og bytter det ud med en anden process. Det første vi gør er derfor at oprette en nye process med {\tt fork()}. Fork opretter en kopi af den eksisterende process. Den nye process kaldes for en \textit{child process} og den eksisternede process for en \textit{parrent process}. Dette gøres med følgende kode.
 
 \begin{lstlisting}
-int isValidCmd(char **cmd){
-    if(strncmp(*cmd,"exit",4) == 0) return -1;
 
-    char str1[100];
-    char str2[100];
-    char str3[100];
+... Parrent process code
 
-    char *path1 = "/bin/";
-    char *path2 = "/usr/bin/";
-    char *path3 = "./";
-
-    strcpy(str1,path1);
-    strcat(str1, *cmd);
-    strcpy(str2,path2);
-    strcat(str2, *cmd);
-    strcpy(str3,path3);
-    strcat(str3, *cmd);
-
-    return 
-        access ( str1, F_OK ) != -1 || 
-        access ( str2, F_OK ) != -1 || 
-        access ( str3, F_OK ) != -1;
+pid_t pid = fork();
+if(pid == 0){
+    ... Child process code ...
+}else{
+    ... Parrent process code ...
 }
+
+... Parrent and child process code ...
+
 \end{lstlisting}
 
+Når vi har lavet et kopi af shell processen bytter vi ved brug af {\tt execvp} \textit{child processen} ud med det program som brugeren ønskede at starte. På den måde kan vi starte programmer som nye processer fra vores BOSC shell.
 
 \section{Feature 3}
 
-Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. I shellcmd structen vil feltet {\tt background} være sat til {\tt 1} ({\tt true}) hvis processen skal køres som en baggrundsproces. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}).
+Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. Vi ønsker denne feature fordi at en bruger skal kunne køre flere programmer fra shell'en på samme tid. Når vi starter en process vil vi gerne vente på den terminiene inden vi igen tillader input fra brugeren. Dette gør vi med {\tt waitpid(process_id, status_location, options)}. Når vi starter en baggrundsproces vælger altså derfor blot ikke at vente på barne processen og lader derfor strakts brugeren indtaste nyt input. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}). {\tt shellcmd} er en struct vi bruger til at holde brugerens kommando. 
 \begin{lstlisting}
 int executeshellcmd(Shellcmd *shellcmd){
     
@@ -106,7 +90,7 @@ int executeshellcmd(Shellcmd *shellcmd){
 
     pid_t pid = fork();
     if(pid == 0){
-           ... Code executing shellcmd
+           ... Code executing the user input program ...
     }else{
         if(shellcmd -> background == 0){
             int wstatus = 0;    
