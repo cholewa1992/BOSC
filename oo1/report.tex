@@ -55,9 +55,6 @@ I denne rapport vil vi beskrive hvordan vi har implementeret vores version af Sh
 \item Tryk på Ctrl-C skal afslutte det program, der kører i {\tt bosh} shell’en, men ikke shell’en selv.
 \end{enumerate}
 
-Følgende vil handle om vores implementation af disse features 
-
-
 \chapter{Implementation og teori}
 \section{Feature 1 og 2}
 Første krav til vores shell er at vi ikke bruger andre shells til at få vores shell eller systemkald til at virke. Det skal altså være et selvstående program. En shell er en grafisk brugergrænseflade der tillader brugeren at inputte og køre programmer. Shellen er altså en process der kan starte andre programmer som processer. For at en bruger kan eksekvere programmer på maskinen så som {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver. Vi har skrevet vores shell til linux systemer, og vi leder derfor efter det inputtede program i mapperne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Hvis vi finder programmet som brugeren prøver at starte bruger vi vi det indbyggede program i linux {\tt execvp}. {\tt execvp} programmet tager en process og bytter det ud med en anden process. Det første vi gør er derfor at oprette en nye process med {\tt fork()}. Fork opretter en kopi af den eksisterende process. Den nye process kaldes for en \textit{child process} og den eksisternede process for en \textit{parrent process}. Dette gøres med følgende kode.
@@ -81,7 +78,7 @@ Når vi har lavet et kopi af shell processen bytter vi ved brug af {\tt execvp} 
 
 \section{Feature 3}
 
-Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. Vi ønsker denne feature fordi at en bruger skal kunne køre flere programmer fra shell'en på samme tid. Når vi starter en process vil vi gerne vente på den terminiene inden vi igen tillader input fra brugeren. Dette gør vi med {\tt waitpid(process_id, status_location, options)}. Når vi starter en baggrundsproces vælger altså derfor blot ikke at vente på barne processen og lader derfor strakts brugeren indtaste nyt input. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}). {\tt shellcmd} er en struct vi bruger til at holde brugerens kommando. 
+Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. Vi ønsker denne feature fordi at en bruger skal kunne køre flere programmer fra shell'en på samme tid. Når vi starter en process vil vi gerne vente på den terminiene inden vi igen tillader input fra brugeren. Dette gør vi med {\tt waitpid(process\_id, status\_location, options)}. Når vi starter en baggrundsproces vælger altså derfor blot ikke at vente på barne processen og lader derfor strakts brugeren indtaste nyt input. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}). {\tt shellcmd} er en struct vi bruger til at holde brugerens kommando. 
 \begin{lstlisting}
 int executeshellcmd(Shellcmd *shellcmd){
     
@@ -105,7 +102,7 @@ int executeshellcmd(Shellcmd *shellcmd){
 
 Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på venstre side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra venstre side. eg {\tt cmd < file}. 
 
-Redirect {\tt >} og {\tt <}, er systemkald der redirigerer processers input og output. Ved kaldet {\tt p1 > p2} , sættes p1's output filedescriptor til p2's input  filedescriptor.       
+Redirect {\tt >} og {\tt <}, er syntaks der omdirigerer processers input og output. Ved kaldet {\tt p1 > p2} , sættes p1's output filedescriptor til p2's input  filedescriptor.       
 
 Dette har vi implementeret med følgende logik.
 
@@ -210,46 +207,7 @@ int executecmd(Cmd *cmdlist){
 
 \end{lstlisting}
 
-\section{Feature 6}
-
-%Denne funktion er allerede forklaret som en del af feature 6. 
-
-I 'executeshellcmd' samler vi alle commands og sender dem til funktionen 'isValidCmd' for validering (unødvendigt, da execute funktionerne allerede returnerer -1 hvis en command ikke findes). Som sagt under Feature 2 returnerer denne funktion -1 Hvis 'exit' er en command. 'executeShellCmd' returnerer så umiddelbart 1 til 'main' metoden. Dermed terminerer while loopet i 'main' og vores shell slutter. 
-
-I executeShellCmd() samler vi alle commands og sender dem til validering. Hvis status er -1 returnerer vi fra funktionen.
-
-
-
-
-\begin{lstlisting}
-while( cmdlist != NULL){
-	char **cmd = cmdlist -> cmd;
-	cmdlist = cmdlist -> next;
-	status = isValidCmd(cmd);
-
-	if(status == 0){ 
-		printf("%s: command not found\n", *cmd );
-		return 0;
-	}
-	if(status == -1) return 1;
-}
-\end{lstlisting}
-
-I isValidCmd() returnerer vi -1 hvis 'exit' er en command.
-\begin{lstlisting}
-int isValidCmd(char **cmd){
-	
-	if(strncmp(*cmd,"exit",4) == 0) return -1;
-\end{lstlisting}
-
-I main(). Terminering af while loopet afslutter vores shell. 
-\begin{lstlisting}
-/* parse commands until 'exit' command, then exit */
-while (!terminate) {
-	terminate = executeshellcmd(&shellcmd);
-\end{lstlisting}
-
-\section{Feature 7}
+\section{Feature 6 og 7}
 
 Et signal eller et interrupt er en event som midlertidigt overlader program kontrollen til et andet program eller funktion. Når funktionen eller programmet er færdigt kan kontrollen overlades til den 'interruptede' process som så kan fortsætte. Man skelner mellem hardware og software interrupts.
 
