@@ -103,7 +103,11 @@ int executeshellcmd(Shellcmd *shellcmd){
 
 \section{Feature 4}
 
-Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på venstre side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra venstre side. eg {\tt cmd < file}. Dette har vi løst med følgende logik.
+Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på venstre side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra venstre side. eg {\tt cmd < file}. 
+
+Redirect {\tt >} og {\tt <}, er systemkald der redirigerer processers input og output. Ved kaldet {\tt p1 > p2} , sættes p1's output filedescriptor til p2's input  filedescriptor.       
+
+Dette har vi implementeret med følgende logik.
 
 \begin{lstlisting}
 if(in == NULL && out == NULL){
@@ -165,7 +169,11 @@ int redirOut(char *outFile, Cmd *cmdlist){
 
 \section{Feature 5}
 
-En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. eg {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. Vi har i vores shell implementeret dette med følgende logik. Denne metode kaldes af de metoder som var vist i feature 4.
+En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. E.g. {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. 
+
+En pipe er et systemkald som opretter en envejs kommunikation mellem to processer. Kaldet {\tt pipe}, tager en array med to elementer, de to processer's henh. out - og input filedescriptors. Først kalder vi {\tt pipe} med en {\tt int fd[2]} array som argument, dernæst sætter vi arrayens to elementer til et output og et input ved at kopiere processernes respektive filedescriptors med {\tt dup }. Vi lukker så den første process' output filedescriptor og den næste process' input filedescriptor. Nu kan det som puttes ind i den ene ende læses i den anden.  
+
+Vi har i vores shell implementeret dette med følgende logik. Denne metode kaldes af de metoder som var vist i feature 4.
 
 \begin{lstlisting}
 int executecmd(Cmd *cmdlist){
@@ -210,6 +218,9 @@ I 'executeshellcmd' samler vi alle commands og sender dem til funktionen 'isVali
 
 I executeShellCmd() samler vi alle commands og sender dem til validering. Hvis status er -1 returnerer vi fra funktionen.
 
+
+
+
 \begin{lstlisting}
 while( cmdlist != NULL){
 	char **cmd = cmdlist -> cmd;
@@ -240,7 +251,39 @@ while (!terminate) {
 
 \section{Feature 7}
 
-Denne feature nåede ikke at blive implementeret i vores {\tt BOSH} shell.
+Et signal eller et interrupt er en event som midlertidigt overlader program kontrollen til et andet program eller funktion. Når funktionen eller programmet er færdigt kan kontrollen overlades til den 'interruptede' process som så kan fortsætte. Man skelner mellem hardware og software interrupts.
+
+Et software interrupt eller signal er en asynkron aktivitet. i.e., processer venter ikke på signalet. Det program eller den funktion der er designet til at svare på en event siges at fange den, eller på engelsk,  at 'trap' eller 'handle' eventen. Derfor kaldes den typisk en 'signal handler'. 
+
+Et program tildeles en række default handlers som udgør events som det kan 'fange'. Eksempelvis, hvis et program kører i en prompt, vil tastekombinationen ctrl-c blive fanget af en handler hvis default handling er at terminere processen. 
+
+\subsection{Implementation}
+Vi har implementeret en signal handler der fanger ctrl-c interrupts. Når vi forker en ny process attacher vi vores signal handler. Det sker både i executecmd metoden og i executeshellcmd metoden, fordi vi forker nye processer begge disse to steder. 
+
+\begin{lstlisting}
+...
+pid_t pid = fork();
+if(pid == 0){
+	// setup a signal handler for this thread
+	signal(SIGINT, leave);
+...
+\end{lstlisting}
+
+Når man herefter trykker ctrl-c bliver program kontrollen overført til vores handler metode. Her kan vi så exitte processen hvis den er forked. Hvis den ikke er forked må det være vores bosh shell og så gør metoden intet. 
+
+\begin{lstlisting}
+// signal handler
+void leave(int sig){
+	pid_t pid = getpid();
+	if(pid == 0){
+		// thread interrupt
+		exit(sig);
+	}
+}
+\end{lstlisting}
+
+
+Hvorefter kontrollen gives tilbage til bosh shell.
 
 \chapter{Konklusion}
 \end{document}          
