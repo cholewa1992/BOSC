@@ -29,6 +29,20 @@
   tabsize=4
 }
 
+% clickable TOC
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+
 % Title Page
 \title{Obligatorisk opgave 1}
 \author{Jacob B. Cholewa, Rasmus L. Wismann \& Nikolai Storr }
@@ -77,6 +91,7 @@ if(pid == 0){
 Når vi har lavet et kopi af shell processen bytter vi ved brug af {\tt execvp} \textit{child processen} ud med det program som brugeren ønskede at starte. På den måde kan vi starte programmer som nye processer fra vores BOSC shell.
 
 \section{Feature 3}
+\section{Baggrundsproces}
 
 Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. Vi ønsker denne feature fordi at en bruger skal kunne køre flere programmer fra shell'en på samme tid. Når vi starter en process vil vi gerne vente på den terminiene inden vi igen tillader input fra brugeren. Dette gør vi med {\tt waitpid(process\_id, status\_location, options)}. Når vi starter en baggrundsproces vælger altså derfor blot ikke at vente på barne processen og lader derfor strakts brugeren indtaste nyt input. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}). {\tt shellcmd} er en struct vi bruger til at holde brugerens kommando. 
 \begin{lstlisting}
@@ -98,11 +113,24 @@ int executeshellcmd(Shellcmd *shellcmd){
 }
 \end{lstlisting}
 
-\section{Feature 4}
+\section{Redirect}
+\label{redirect}
+I Linux bliver input devices og data streams betragtet som filer. En file descriptor er et handle til en åben fil.
 
-Hvis symbolet {\tt >} optræder i kommandoen skal vi omdirigere output til filnavnet på venstre side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra venstre side. eg {\tt cmd < file}. 
+En file descriptor er et index i en tabel. Hver process har en file descriptor tabel. Tabellen indeholder descriptors der giver processen adgang til åbnede filer, sockets, pipes og kernel-level strukturer.   
 
-Redirect {\tt >} og {\tt <}, er syntaks der omdirigerer processers input og output. Ved kaldet {\tt p1 > p2} , sættes p1's output filedescriptor til p2's input  filedescriptor.       
+En bash shell har automatisk adgang til tre file descriptors, StdIn, StdOut og StdErr. StdIn, StdOut og StdErr er alle character devices i linux. De sender en strøm af bytes fra shell'en til en underliggende process.  
+
+StdOut  beskrives med file descriptor 1. StdIn beskrives med file descriptor 0. Når outputttet fra én proces' file descriptor 1 sendes til inputtet fra en anden proces' file descriptor 0, redirectes brugerens input fra den første process til den anden. Samtidig lukkes de ubrugte input og output.   
+
+Linux har to redirection operators, {\tt >} og {\tt <}, som begge gør netop dette. Et system kald, {\tt p1 > p2}, fungerer ved at p2's input file descriptor sættes til p1's output file descriptor. Systemet lukker samtidig p2's gamle input filedescriptor samt p1's gamle output file descriptor. 
+
+I system kaldet  {\tt p1 < p2} sættes p1's input file descriptor til p2's output file descriptor. Systemet lukker også p1's gamle input filedescriptor samt p2's gamle output file descriptor. 
+
+Denne modulare fremgangsmåde gør at man i Linux kan bygge stadig større funktionalitet op ved at sammensætte system kald.  
+   
+\subsection{Implementation}
+Hvis symbolet {\tt >} optræder i kommandoen skal vi ifølge opgaven omdirigere output til filnavnet på venstre side. eg. {\tt cmd > file}. På samme måde skal vi hvis symbolet {\tt <} optræder i kommandoen omdirigere input til at være filen fra venstre side. eg {\tt cmd < file}. 
 
 Dette har vi implementeret med følgende logik.
 
@@ -161,16 +189,49 @@ int redirOut(char *outFile, Cmd *cmdlist){
 \end{lstlisting}
 
 
+De tre redirect metoder bruger alle samme logik. 
+
+Vi åbner den fil som optræder i shell input kommandoen (husk, alle I/O objekter (streams, devices) betragtes som filer i Linux ).  {\tt open} kommandoen returnerer altså en file descriptor. 
+
+Dernæst lukkes de gamle StdIn og StdOut hvorefter vi duplikerer den åbne fil descriptor med {\tt dup} system kaldet. 
+
+Nu eksekveres så resten af command listen (executecmd(cmdlist)) i.e., andre processer forkes som nu arver de input output vi har sat op i vores redirect. Til sidst lukkes filen/filerne  igen. 
+
+Sammen med {\tt pipe} bruges {\tt dup} i Linux til at konstruere pipes mellem processers standard input og ouput (se \ref{pipe}).
 
 
+\section{Pipe}
+\label{pipe}
+% ??? 
+%En pipe (c1 {\tt | c2}) tager outputtet fra kommandoen på %højre side og bruger det som input til kommandoen på %venstre side. E.g. {\tt c1 | c2 | c3 } tager output fra c1 %og giver til c2 som input osv. 
 
-\section{Feature 5}
 
-En pipe (skrives med symbol {\tt |}) tager outputtet fra kommandoen på højre side og bruger det som input til kommandoen på venstre side. E.g. {\tt c1 | c2 | c3 } tager output fra c1 og giver til c2 som input osv. 
+Pipes er en form for inter-process-communication (IPC) i Linux. En pipe associerer outputtet fra én process med en in-memory buffer i systemet. Andre processer kan nu associere deres input med denne buffer og derefter forbruge outputtet fra processen. 
 
-En pipe er et systemkald som opretter en envejs kommunikation mellem to processer. Kaldet {\tt pipe}, tager en array med to elementer, de to processer's henh. out - og input filedescriptors. Først kalder vi {\tt pipe} med en {\tt int fd[2]} array som argument, dernæst sætter vi arrayens to elementer til et output og et input ved at kopiere processernes respektive filedescriptors med {\tt dup }. Vi lukker så den første process' output filedescriptor og den næste process' input filedescriptor. Nu kan det som puttes ind i den ene ende læses i den anden.  
+Et {\tt pipe(fd)} kald tager et enkelt argument, {\tt fd[2]}, en array med to elementer. De to elementer repræsenterer file descriptors for et input og et output. pipes bruges typisk mellem en parent og child process. Først oprettes et argument arrray, dernæst etableres en {\tt pipe(fd)}. Derefter forker man processen hvilket medfører at alt data fra forældreren kopieres, inklusive pipen. 
 
-Vi har i vores shell implementeret dette med følgende logik. Denne metode kaldes af de metoder som var vist i feature 4.
+Hvis forældreren ønsker at modtage data fra barnet lukkes forældrens {\tt fd[1] }, og barnets {\tt fd[0]}. Hvis det modsatte er tilfældet bytter man  rundt på disse. Siden file descriptors er delt mellem forældre og barne process skal man huske også, at lukke den ubrugte ende af pipen.
+
+
+\includegraphics[scale=0.5]{pipe}
+
+Hvis pipe bufferen er tom vil den modtagende process blokere indtil der er data tilgængelig. Dette kan i sig selv bruges som kommunikationsstrategi. Alt hvad den skabende process behøver for at signalere den modtagende process, er at sende en enkelt byte.
+
+\subsection{dup}
+Ofte kan barne processens standard in og output file descriptors duplikeres ved hjælp af system kaldet {\tt dup} . Efter system kaldet {\tt dup} kan barneprocessen eksekvere helt tredje processer som så vil arve standard input og standard output fra barnet. 
+
+{\tt dup} system kaldet bruger altid den kaldende proces' lavest nummererede ubrugte file descriptor (dvs. lukkede descriptor), i.e., hvis {\tt fd[1]} er tilgængelig , bruges denne.
+
+Dette betyder at man typisk starter i barneprocessen af en pipe. Først lukkes den file descriptor man ikke skal bruge, og dernæst kaldes {\tt dup} som så duplikerer den ubrugte file descriptor over som en af de de nye standard input  output file descriptors. De processer der herefter eksekveres fra barneprocessen arver nu disse input og output som deres StdIn og StdOut.
+
+
+\subsection{Implementation}
+Vi har i vores shell implementeret pipes ved hjælp af følgende logik. {\tt executecmd} metoden kaldes af de metoder som er vist i \ref{redirect}.
+
+Først opretter vi en {\tt pipe} med en {\tt int fd[2]} array som argument og så forker vi en ny process. Dernæst lukker vi dennes input samt forældreprocessens ouput. Så sætter vi {\tt fd} arrayens to elementer til processernes respektive filedescriptors med {\tt dup}. Til sidst kalder vi rekursivt metoden igen indtil der ikke er flere commands i {\tt cmdlist }. 
+
+På den måde piper vi inputtet fra én command ind i den næste, og så fremdeles, ned gennem en liste  af commands. 
+
 
 \begin{lstlisting}
 int executecmd(Cmd *cmdlist){
@@ -207,16 +268,53 @@ int executecmd(Cmd *cmdlist){
 
 \end{lstlisting}
 
-\section{Feature 6 og 7}
+\section{Exit}
+
+%Denne funktion er allerede forklaret som en del af feature 6. 
+
+I 'executeshellcmd' samler vi alle commands og sender dem til funktionen 'isValidCmd' for validering (unødvendigt, da execute funktionerne allerede returnerer -1 hvis en command ikke findes). Som sagt under Feature 2 returnerer denne funktion -1 Hvis 'exit' er en command. 'executeShellCmd' returnerer så umiddelbart 1 til 'main' metoden. Dermed terminerer while loopet i 'main' og vores shell slutter. 
+
+I executeShellCmd() samler vi alle commands og sender dem til validering. Hvis status er -1 returnerer vi fra funktionen.
+
+
+\begin{lstlisting}
+while( cmdlist != NULL){
+	char **cmd = cmdlist -> cmd;
+	cmdlist = cmdlist -> next;
+	status = isValidCmd(cmd);
+
+	if(status == 0){ 
+		printf("%s: command not found\n", *cmd );
+		return 0;
+	}
+	if(status == -1) return 1;
+}
+\end{lstlisting}
+
+I isValidCmd() returnerer vi -1 hvis 'exit' er en command.
+\begin{lstlisting}
+int isValidCmd(char **cmd){
+	
+	if(strncmp(*cmd,"exit",4) == 0) return -1;
+\end{lstlisting}
+
+I main(). Terminering af while loopet afslutter vores shell. 
+\begin{lstlisting}
+/* parse commands until 'exit' command, then exit */
+while (!terminate) {
+	terminate = executeshellcmd(&shellcmd);
+\end{lstlisting}
+
+\section{Ctrl-c}
 
 Et signal eller et interrupt er en event som midlertidigt overlader program kontrollen til et andet program eller funktion. Når funktionen eller programmet er færdigt kan kontrollen overlades til den 'interruptede' process som så kan fortsætte. Man skelner mellem hardware og software interrupts.
 
 Et software interrupt eller signal er en asynkron aktivitet. i.e., processer venter ikke på signalet. Det program eller den funktion der er designet til at svare på en event siges at fange den, eller på engelsk,  at 'trap' eller 'handle' eventen. Derfor kaldes den typisk en 'signal handler'. 
 
-Et program tildeles en række default handlers som udgør events som det kan 'fange'. Eksempelvis, hvis et program kører i en prompt, vil tastekombinationen ctrl-c blive fanget af en handler hvis default handling er at terminere processen. 
+Et program tildeles en række default handlers som udgør events som det kan 'fange'. For eksempel, hvis et program kører i en prompt vil tastekombinationen ctrl-c blive fanget af en handler, hvis default handling er, at terminere processen. 
 
 \subsection{Implementation}
-Vi har implementeret en signal handler der fanger ctrl-c interrupts. Når vi forker en ny process attacher vi vores signal handler. Det sker både i executecmd metoden og i executeshellcmd metoden, fordi vi forker nye processer begge disse to steder. 
+Vi har implementeret en signal handler der fanger ctrl-c interrupts. Hver gang vi forker en ny process attacher vi vores signal handler. Det sker både i executecmd metoden og i executeshellcmd metoden fordi vi forker nye processer begge disse to steder. 
 
 \begin{lstlisting}
 ...
@@ -227,7 +325,7 @@ if(pid == 0){
 ...
 \end{lstlisting}
 
-Når man herefter trykker ctrl-c bliver program kontrollen overført til vores handler metode. Her kan vi så exitte processen hvis den er forked. Hvis den ikke er forked må det være vores bosh shell og så gør metoden intet. 
+Når man herefter trykker ctrl-c bliver program kontrollen overført til vores handler metode. Her kan vi så exitte processen hvis det er en child process. Hvis det ikke er , må det være vores bosh shell selv, og så gør metoden intet. 
 
 \begin{lstlisting}
 // signal handler
@@ -240,8 +338,7 @@ void leave(int sig){
 }
 \end{lstlisting}
 
-
-Hvorefter kontrollen gives tilbage til bosh shell.
+Herefter gives kontrollen tilbage til vores bosh shell.
 
 \chapter{Konklusion}
 \end{document}          
