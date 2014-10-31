@@ -1,2 +1,2 @@
-/home/mat/BOSC/oo3/simple.ko
-/home/mat/BOSC/oo3/simple.o
+/home/jbec/repo/BOSC/oo3/simple.ko
+/home/jbec/repo/BOSC/oo3/simple.o
