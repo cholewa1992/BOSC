@@ -1,1 +1,0 @@
-cmd_/home/jbec/repo/BOSC/oo3/simple.ko := ld -r -m elf_x86_64 -T /usr/src/linux-headers-3.13.0-37-generic/scripts/module-common.lds --build-id  -o /home/jbec/repo/BOSC/oo3/simple.ko /home/jbec/repo/BOSC/oo3/simple.o /home/jbec/repo/BOSC/oo3/simple.mod.o
