@@ -36,14 +36,16 @@
 \title{Obligatorisk opgave 2}
 \author{Jacob B. Cholewa \& Mathias Pedersen }
 
-\chapter{Introduktion}
-I denne rapport arbejdes med anden obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som parallel processering, mutex låsning, semaforer og Bankers algoritme til deadlock håndtering.
-
-\chapter{Metode}
-I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
-
 \begin{document}
 \maketitle
+
+\chapter{Introduktion}
+I denne rapport arbejdes med anden obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som parallel processering, mutex låsning, semaforer og Bankers algoritme til deadlock håndtering.b
+
+\section{Metode}
+I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
+
+
 \chapter{Multitrådet sum}
 På en multicore processror kan vi køre instruktioner i parallel. Det vil vi i denne opgave udnytte til hurtigere at udregne $ sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} $.
 
@@ -87,7 +89,7 @@ pthread_join(&tid, NULL);
 For at kunne køre udregningen i parallel skal vi kunne opdele beregningen til mindre udregninger. Det kan vi gøre fordi følgende gælder.
 
 \begin{equation*}
-sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} = \sqrt{0} + \displaystyle\sum\limits_{j=0}^{p} \left( \displaystyle\sum\limits_{i=\frac{n}{p}*j+1}^{\frac{n}{p}} \sqrt{i} \right), \frac{n}{p} \in \mathbb{N} \text{ hvor } p \text{ lig antallet af tråde}
+sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} = \displaystyle\sum\limits_{j=0}^{p} \left( \displaystyle\sum\limits_{i=\frac{n*j}{p}+1}^{\frac{n*(j+1)}{p}} \sqrt{i} \right), \frac{n}{p} \in \mathbb{N} \text{ hvor } p \text{ lig antallet af tråde}
 \end{equation*}
 
 
@@ -100,16 +102,12 @@ for(int i = 0; i < nthreads; i++){
     cut = sumto / threadsleft;
     /* prepares the argument for thread i */
     args[i] = (Runnerargs)  {(last + 1),(last + cut),&sum[i]};
-
     /* starts a new thread that runs the method runner with arguments args[i] */
     pthread_create(&tid[i],NULL,runner,&args[i]);
-
     /* removes the range from the amount still needed to be calculated */
     sumto -= cut;
-
     /* decrement the amount of threads needed to be started */
     threadsleft--;
-
     /* saves the last element calculated by this thread */
     last+=cut;
 }
@@ -411,10 +409,6 @@ Denne metode terminer kun hvis request vektoren bliver allokeret forskelligt fra
 \label{fig:2}
 \end{center}
 \end{figure}
-
-
-\chapter{Refleksion}
-
 
 \chapter{Konklusion}
 

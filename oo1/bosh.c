@@ -14,24 +14,28 @@
 #include "print.h"
 #include "fcntl.h"
 #include <errno.h>
+#include <signal.h>
 
 /* --- symbolic constants --- */
 #define HOSTNAMEMAX 100
+char hostname[HOSTNAMEMAX];
+
+// signal handler to catch ctrl-c
+void leave(int sig);
 
 /* --- use the /proc filesystem to obtain the hostname --- */
-char *findhostname(char *hostname)
-{
+char *findhostname(char *hostname){
 	gethostname(hostname,HOSTNAMEMAX);
 	return hostname;
 }
 
-
 int executeshellcmd(Shellcmd *shellcmd){
-	int status = 0;
+	int status = 0, children;
 	Cmd *cmdlist = shellcmd -> the_cmds;
-
+	
 	while( cmdlist != NULL){
 		char **cmd = cmdlist -> cmd;
+		
 		cmdlist = cmdlist -> next;
 		status = isValidCmd(cmd);
 
@@ -39,14 +43,20 @@ int executeshellcmd(Shellcmd *shellcmd){
 			printf("%s: command not found\n", *cmd );
 			return 0;
 		}
+		
 		if(status == -1) return 1;
 	}
 	
 	status = 0;
 	cmdlist = shellcmd -> the_cmds;
-
+	
+		
 	pid_t pid = fork();
 	if(pid == 0){
+		
+		// setup a signal handler for this thread
+		signal(SIGINT, leave);
+		
 		char *in = shellcmd -> rd_stdin;
 		char *out = shellcmd -> rd_stdout;
 		if(cmdlist != NULL){
@@ -80,6 +90,9 @@ int executecmd(Cmd *cmdlist){
 
 		pid_t pid = fork();
 		if(pid == 0){
+			// setup a signal handler for this thread
+			signal(SIGINT, leave);
+			
 			close(fd[0]);
 			close(1);
 			dup(fd[1]);
@@ -163,29 +176,50 @@ int redirOut(char *outFile, Cmd *cmdlist){
 
 }
 
-/* --- main loop of the simple shell --- */
-int main (int argc, char *argv[]){
+// parse commands
+int loop(){
+	int terminate = 0;
 	/* initialize the shell */
 	char *cmdline;
-	char hostname[HOSTNAMEMAX];
+	Shellcmd shellcmd;  
+	
+	printf("%s", hostname);
+	if (cmdline = readline(":# ")) {
+		if(*cmdline) {
+			add_history(cmdline);
+			if (parsecommand(cmdline, &shellcmd)) {
+				terminate = executeshellcmd(&shellcmd);
+			}
+		}
+		free(cmdline);
+	} else terminate = 1;
+	return terminate;
+}
+
+// signal handler
+void leave(int sig){
+	pid_t pid = getpid();
+	if(pid == 0){
+		// thread interrupt
+		// signal(SIGINT, sigint);
+		exit(sig);
+	}
+}
+	
+/* --- main loop of the simple shell --- */
+int main (int argc, char *argv[]){
 	int terminate = 0;
-	Shellcmd shellcmd;
-  
-  	if (findhostname(hostname)) {
-    		/* parse commands until exit or ctrl-c */
-    		while (!terminate) {
-      			printf("%s", hostname);
-      			if (cmdline = readline(":# ")) {
-				if(*cmdline) {
-	  				add_history(cmdline);
-	  				if (parsecommand(cmdline, &shellcmd)) {
-	    					terminate = executeshellcmd(&shellcmd);
-	 				}
-				}
-				free(cmdline);
-    			 } else terminate = 1;
-   		 }
-   		 printf("Exiting bosh.\n");
+	
+	// capture ctrl-c
+	signal(SIGINT, leave);
+	
+  	if (findhostname(hostname)) {		
+		/* parse commands until exit or ctrl-c */
+		while (!terminate) {
+			terminate = loop();
+  	    }
+		printf("Exiting bosh.\n");
   	}    
   	return EXIT_SUCCESS;
+	
 }
