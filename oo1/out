@@ -1,0 +1,14 @@
+6.txt
+Makefile
+bosh
+bosh.c
+bosh.o
+out
+parser.c
+parser.h
+parser.o
+pipe.png
+print.c
+print.h
+print.o
+report.tex

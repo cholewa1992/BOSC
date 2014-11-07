@@ -22,8 +22,6 @@ int simple_init(void)
 {
 		printk(KERN_INFO "Loading Module\n");
 		
-		
-
 		int i;
 		
 		for (i = 1; i <= 5; i++){
