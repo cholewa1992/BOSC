@@ -33,7 +33,7 @@
 }
 
 % Title Page
-\title{Obligatorisk opgave 3e}
+\title{Obligatorisk opgave 3}
 \author{Jacob B. Cholewa \& Mathias Pedersen }
 
 \begin{document}
@@ -43,10 +43,77 @@
 \chapter{Metode (Mathias)}
 \chapter{Teori}
 \section{Linux kernen og moduler (Mathias)}
-\section{Linkedlist i Linuxkernen (Jacob)}
-\section{Macro metoder i C (Jacob)}
+
+
+\section{Macro metoder i C}
+
+I C har man mulighed for at definere macro metoder. En macro er et stykke kode fragment som man knytter til en macro navn. Når navnet bruges i koden vil preprocessoren indsætte kode fragmentet. Nedenfor ses macroen min og hvordan preprocessoren indsætter kodefragmentet ved brug.
+\begin{lstlisting}
+#define min(X, Y)  ((X) < (Y) ? (X) : (Y))
+x = min(a, b);          // x = ((a) < (b) ? (a) : (b));
+y = min(1, 2);          //y = ((1) < (2) ? (1) : (2));
+z = min(a + 28, *p);    //z = ((a + 28) < (*p) ? (a + 28) : (*p));
+\end{lstlisting}
+
+\section{Taskstruct og Linkedlist i Linuxkernen}
+
+Biblioteket \texttt{<linux/list.h>} er en linkedlist implimentation i Linux. Implementationen bygger på structen \texttt{list\_head}. Structen indeholder en pointer til det næste og forrige element og på den måde kan man lave en liste af elementer.
+
+\begin{lstlisting}
+struct list_head {
+    struct list_head *next, *prev;
+};
+\end{lstlisting}
+
+Til at traversere listen kan man bruge list\_for\_each\_entry macroen
+
+\begin{lstlisting}
+/**
+ * list_for_each_entry  -       iterate over list of given type
+ * @pos:        the type * to use as a loop cursor.
+ * @head:       the head for your list.
+ * @member:     the name of the list_struct within the struct.
+ */
+#define list_for_each_entry(pos, head, member) \
+    for (pos = list_entry((head)->next, typeof(*pos), member); \
+        prefetch(pos->member.next), &pos->member != (head); \
+            pos = list_entry(pos->member.next, typeof(*pos), member))
+\end{lstlisting}
+
+Macroen tager, givet det første element, og løber listen i gennem ved hele tiden af tage elementets next, altså det næste element, indtil enden af listen af nået.
+
+En af de andre biblioteker der benytter linkedlist implementationen er \texttt{<linux/sched.h>}. En del af \texttt{sched} er \texttt{task\_struct}. Denne struct bruges til at holde information om processer der kører på systemmet. Structen indeholder information om processens børneprocess. Derfor kan vi traversere gennem process træet og finde alle processer der køre på systemmet.
+
+\begin{lstlisting}
+struct task_struct {
+    ... fields ...
+    struct list_head children;      /* list of my children */
+    struct list_head sibling;       /* linkage in my parent's children list */
+}
+\end{lstlisting}
+
+For at kunne traversere processtræet har vi brug for den process som er forældre til alle andre processer i systemet. Denne process, init processen, er gemt i \texttt{init\_task} feltet i \texttt{<linux/sched.h>}
+
+
 \chapter{Implementation}
 \section{Simple mod (Jacob)}
+
+Dette eksempel er et linux modul som indeholder personers fødselsdag og printer fødselsdagene til \textit{kernel output}. Vi har altså derfor brug for en struct til at holde information om personer fødselsdag.
+
+\begin{lstlisting}
+typedef struct birthday {
+        int day;
+        int month;
+        int year;
+        struct list_head list;
+} Birthday;
+\end{lstlisting}
+
+I vores module init metode opretter vi derfor en liste personer. Vi bruger kmalloc til at allokere hukommelse til strucen og fylder den derefter med personens data. Derefter itererer vi ved hjælp af \texttt{list\_for\_each\_entry} igennem den liste vi lige har oprettet og printer alle personernes fødselsdag til \textit{kernel output}.
+
+Når modulet bliver fjernet igen kaldes modulets exit metode hvor vi igen itererer over listen for at fjerne personerne og deallokerer hukommelsen igen. 
+
+
 \section{Tasklist mod (Mathias)}
 \chapter{Verificering (Jacob)}
 \chapter{Konklusion (Mathias)}
