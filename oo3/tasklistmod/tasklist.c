@@ -5,44 +5,25 @@
 #include <linux/printk.h>
 #include <linux/sched.h>
 
-
-struct task_struct *task;
+void dfs(struct task_struct *tsk, struct list_head *list){
+	struct task_struct *task;
+	list_for_each(list, &tsk->children){
+		task = list_entry(list, struct task_struct, sibling);
+		printk(KERN_INFO "%d %s\n", task->pid, task->comm);
+		dfs(task,list);
+	}
+}
 
 /* This function is called when the module is loaded. */
 int simple_init(void)
 {
 		printk(KERN_INFO "Loading Module\n");
-		
-			
-		
-		struct task_struct *task;
 		struct list_head *list;
-		struct task_struct init_task;
-		
-		task = &init_task;
-		
-		dfs:
-		printk(KERN_INFO "%d %s\n", task->pid, task->comm);
-		list_for_each(list, task->children) {
-		task = list_entry(list, struct task_struct, sibling);
-		if(task != null){
-			goto dfs;
-		}
-		if(sibling != null){
-			task = sibling;
-			goto dfs;
-		}
-	}
-		
-		
-		
-		return 0;
+		dfs(&init_task, list);		
+
+	return 0;
 }
 
-void dfs(task_struct *task, task_struct *list){
-
-
-}
 
 /* This function is called when the module is removed. */
 void simple_exit(void) {
