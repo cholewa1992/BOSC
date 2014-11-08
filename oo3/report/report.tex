@@ -47,7 +47,7 @@
 
 \section{Macro metoder i C}
 
-I C har man mulighed for at definere macro metoder. En macro er et stykke kode fragment som man knytter til en macro navn. Når navnet bruges i koden vil preprocessoren indsætte kode fragmentet. Nedenfor ses macroen min og hvordan preprocessoren indsætter kodefragmentet ved brug.
+I C har man mulighed for at definere macro metoder. En macro er et stykke kode fragment som man knytter til et macro navn. Når navnet bruges i koden vil preprocessoren indsætte kode fragmentet. Nedenfor ses macroen \texttt{min} og hvordan preprocessoren indsætter kodefragmentet ved brug.
 \begin{lstlisting}
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
 x = min(a, b);          // x = ((a) < (b) ? (a) : (b));
