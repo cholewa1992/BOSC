@@ -1,5 +1,5 @@
 \documentclass[danish]{report}
-
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[danish]{babel}
 \usepackage{listings}
@@ -8,10 +8,19 @@
 \usepackage{parskip}
 \usepackage{graphicx}
 \usepackage{amsfonts}
+\usepackage{tabularx}
+\usepackage{titlesec, blindtext, color}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{gray75}{gray}{0.75}
+\definecolor{light-gray}{gray}{0.5}
+\newcommand{\hsp}{\hspace{20pt}}
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\textcolor{gray75}{|}\hsp}{0pt}{\Huge\bfseries}
+\titlespacing*{\chapter}{0cm}{-20pt}{10pt}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
 
 \lstset{
   frame=,
@@ -37,13 +46,14 @@
 
 \begin{document}
 \maketitle
-
+\begingroup
+\let\clearpage\relax
 \chapter{Introduktion}
 I denne rapport arbejdes med tredje obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som Macroer, linkedlists og moduler i linuxkernen.
 
-\chapter{Metode (Mathias)}
+\vspace{20 mm}\chapter{Metode (Mathias)}
 I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
-
+\endgroup
 \chapter{Teori}
 \section{Linux kernen og moduler (Mathias)}
 
@@ -86,7 +96,7 @@ Til at traversere listen kan man bruge list\_for\_each\_entry macroen
 
 Macroen tager, givet det første element, og løber listen i gennem ved hele tiden af tage elementets next, altså det næste element, indtil enden af listen af nået.
 
-En af de andre biblioteker der benytter linkedlist implementationen er \texttt{<linux/sched.h>}. En del af \texttt{sched} er \texttt{task\_struct}. Denne struct bruges til at holde information om processer der kører på systemmet. Structen indeholder information om processens børneprocess. Derfor kan vi traversere gennem process træet og finde alle processer der køre på systemmet.
+En af de andre biblioteker der benytter linkedlist implementationen er \texttt{<linux/sched.h>}. En del af \texttt{sched} er \texttt{task\_struct}. Denne struct bruges til at holde information om processer der kører på systemmet. Structen indeholder også information om processens børneprocess. Derfor kan vi traversere gennem process træet og finde alle processer der køre på systemmet.
 
 \begin{lstlisting}
 struct task_struct {
@@ -101,13 +111,12 @@ For at kunne traversere processtræet har vi brug for den process som er foræld
 \section{Dybde først søgning}
 DFS, eller Dybde først søgning, er en algoritme til at løbe en graf igennem. Algoritmen består af en stak. Hver gang man tager et element af stakken ligger man alle de ikke allerede besøgt elementer man kan nå fra elementet på stakken. Derefter forsættes processen indtil der ikke er flere elementer på stakken. På det tidspunkt vil man have besøgt alle elementer.
 
-Da C er et stak sprog behøver man ikke et stak da program flowet naturligt vil følge et staks opførsel.  
-
+Da C er et stak sprog behøver man ikke et stak da program flowet naturligt vil følge en staks opførsel.
 
 \chapter{Implementation}
-\section{Simple mod (Jacob)}
+\section{Simple mod}
 
-Dette eksempel er et linux modul som indeholder personers fødselsdag og printer fødselsdagene til \textit{kernel output}. Vi har altså derfor brug for en struct til at holde information om personer fødselsdag.
+Dette eksempel (se fuld program kode i bilag \ref{simple.c}) er et linux modul som indeholder personers fødselsdag og printer fødselsdagene til \textit{kernel output}. Vi har altså derfor brug for en struct til at holde information om personer fødselsdag.
 
 \begin{lstlisting}
 typedef struct birthday {
@@ -118,10 +127,9 @@ typedef struct birthday {
 } Birthday;
 \end{lstlisting}
 
-I vores module init metode opretter vi derfor en liste personer. Vi bruger kmalloc til at allokere hukommelse til strucen og fylder den derefter med personens data. Derefter itererer vi ved hjælp af \texttt{list\_for\_each\_entry} igennem den liste vi lige har oprettet og printer alle personernes fødselsdag til \textit{kernel output}.
+I vores module init metode opretter vi en liste personer. Vi bruger kmalloc til at allokere hukommelse til structen og fylder den derefter med personens data. kmalloc() er ligesom malloc() som allokerer hukommelse, men virker i kernel moduler. Derefter itererer vi ved hjælp af \texttt{list\_for\_each\_entry} igennem den liste vi lige har oprettet og printer alle personernes fødselsdag til \textit{kernel output}.
 
-Når modulet bliver fjernet igen kaldes modulets exit metode hvor vi igen itererer over listen for at fjerne personerne og deallokerer hukommelsen igen. 
-
+Når modulet bliver fjernet igen kaldes modulets exit metode hvor vi igen itererer over listen for at fjerne personerne og deallokerer hukommelsen igen. Her bruger vi en speciel iterator macro som ikke fejler hvis man fjerner elementer under itereringen.
 
 \section{Tasklist mod (Mathias)}
 I denne opgave skal vi meget som den forrige iterere over en linked list og udskrive information. I denne opgave drejer det sig om kørende processor på systemet. Opgaven lyder på at løbe gennem processorne med en dybde først søgning og udskrive visse informationer om dem. Al udprintning sker til \textit{kernel output} med \textit{printk()} funktionen.
@@ -158,12 +166,174 @@ Metoden tager to parametre.
 \textit{list\_for\_each} fungerer som vores while condition der sikre at vi ikke løber over listens lændge. \textit{list\_entry} bruges til at få en pointer til det næste element.
 
 
-
-\chapter{Verificering (Jacob)}
 \chapter{Konklusion (Mathias)}
 I denne opgave har vi løst stillede opgaver med implementering og derefter verificeret at koden virker.
 
+\appendix
+\chapter{Simple module}
+\label{simple.c}
 
-\chapter{Referencer}
+\section{Simple.c}
+\begin{lstlisting}
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/list.h>
+#include <linux/types.h>
+#include <linux/printk.h>
+#include <linux/slab.h>
+
+
+typedef struct birthday {
+    int day;
+    int month;
+    int year;
+    struct list_head list;
+} Birthday;
+
+//struct list_head birthday_list;
+static LIST_HEAD(birthday_list);
+
+/* This function is called when the module is loaded. */
+int simple_init(void)
+{
+        printk(KERN_INFO "Loading Module\n");
+        
+        int i;
+        
+        for (i = 1; i <= 5; i++){
+            Birthday *person;
+            person = kmalloc(sizeof(*person), GFP_KERNEL);
+            person->day = i;
+            person->month= 8;
+            person->year = 1995;
+            INIT_LIST_HEAD(&person->list);
+            list_add_tail(&person->list, &birthday_list);
+            printk(KERN_INFO "added\n");
+        }
+        
+        // for each loop over linked list
+        Birthday *p;
+        list_for_each_entry(p, &birthday_list, list) {
+            printk(KERN_INFO "%d-%d-%d\n", p->day, p->month, p->year);
+        }
+        
+       
+        return 0;
+}
+
+/* This function is called when the module is removed. */
+void simple_exit(void) {
+    printk(KERN_INFO "Removing Module\n");
+    
+    Birthday *ptr, *next;
+    list_for_each_entry_safe(ptr,next,&birthday_list,list) {
+        /* on each iteration ptr points */
+        /* to the next birthday struct */
+        list_del(&ptr->list);
+        printk(KERN_INFO "removed elm %d\n", ptr->day);
+        kfree(ptr);
+    }
+}
+
+/* Macros for registering module entry and exit points. */
+module_init( simple_init );
+module_exit( simple_exit );
+
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Simple Module");
+MODULE_AUTHOR("SGG");
+
+
+\end{lstlisting}
+
+\section{Makefile}
+\begin{lstlisting}
+obj-m += simple.o
+all:
+    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+    sudo rmmod simple
+    sudo insmod simple.ko
+clean:
+    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+
+\end{lstlisting}
+
+\chapter{Tasklist module}
+\label{tasklist.c}
+
+\section{tasklist.c}
+\begin{lstlisting}
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/list.h>
+#include <linux/printk.h>
+#include <linux/sched.h>
+
+void dfs(struct task_struct *tsk, struct list_head *ptr){
+    //Struct used for holding current task
+    struct task_struct *task;
+
+    //For each children of the tsk task
+    list_for_each(ptr, &tsk->children){ 
+            
+        //Gets a pointer to the next element
+        task = list_entry(ptr, struct task_struct, sibling); 
+
+        //Prints information about the task
+        printk(KERN_INFO "%d %s\n", task->pid, task->comm);
+
+        //Call resurcivly on the current task
+        dfs(task,list);
+    }
+}
+
+/* This function is called when the module is loaded. */
+int tasklist_init(void)
+{
+    //Printing to the kernel info output that we're loading the module
+    printk(KERN_INFO "Loading Module\n");
+
+    //Defining a list_head struct to use as a loop cursor
+    struct list_head *ptr;
+
+    //Call the DFS algorithm on the init_task (The mother of all tasks)
+    dfs(&init_task, ptr);       
+
+    return 0;
+}
+
+
+/* This function is called when the module is removed. */
+void tasklist_exit(void) {
+    printk(KERN_INFO "Removing Module\n");
+    
+}
+
+/* Macros for registering module entry and exit points. */
+module_init( tasklist_init );
+module_exit( tasklist_exit );
+
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Tasklist Module");
+MODULE_AUTHOR("SGG");
+\end{lstlisting}
+
+\section{Makefile}
+\begin{lstlisting}
+obj-m += tasklist.o
+all:
+    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+remove: 
+    sudo rmmod tasklist
+install:
+    sudo insmod tasklist.ko
+reinstall:
+    sudo rmmod tasklist
+    sudo insmod tasklist.ko
+clean:
+    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+\end{lstlisting}
 
 \end{document}          
