@@ -99,7 +99,9 @@ struct task_struct {
 For at kunne traversere processtræet har vi brug for den process som er forældre til alle andre processer i systemet. Denne process, init processen, er gemt i \texttt{init\_task} feltet i \texttt{<linux/sched.h>}
 
 \section{Dybde først søgning}
-TODO
+DFS, eller Dybde først søgning, er en algoritme til at løbe en graf igennem. Algoritmen består af en stak. Hver gang man tager et element af stakken ligger man alle de ikke allerede besøgt elementer man kan nå fra elementet på stakken. Derefter forsættes processen indtil der ikke er flere elementer på stakken. På det tidspunkt vil man have besøgt alle elementer.
+
+Da C er et stak sprog behøver man ikke et stak da program flowet naturligt vil følge et staks opførsel.  
 
 
 \chapter{Implementation}
