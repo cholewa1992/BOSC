@@ -7,7 +7,6 @@
 \usepackage{courier}
 \usepackage{parskip}
 \usepackage{graphicx}
-\usepackage{mathtools}
 \usepackage{amsfonts}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
@@ -40,10 +39,15 @@
 \maketitle
 
 \chapter{Introduktion}
+I denne rapport arbejdes med tredje obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som Macroer, linkedlists og moduler i linuxkernen.
+
 \chapter{Metode (Mathias)}
+I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
+
 \chapter{Teori}
 \section{Linux kernen og moduler (Mathias)}
 
+Linux kerne moduler er kodestykker som dynamisk kan loades og unloades en kørende linux kerne. De skal have en \textit{module\_init} og \textit{module\_exit} metode, som hhv. afvikles når modulet loades og unloades. Da moduler er del af kernen kan de bruge system kald direkte.
 
 \section{Macro metoder i C}
 
@@ -94,6 +98,9 @@ struct task_struct {
 
 For at kunne traversere processtræet har vi brug for den process som er forældre til alle andre processer i systemet. Denne process, init processen, er gemt i \texttt{init\_task} feltet i \texttt{<linux/sched.h>}
 
+\section{Dybde først søgning}
+TODO
+
 
 \chapter{Implementation}
 \section{Simple mod (Jacob)}
@@ -115,6 +122,37 @@ Når modulet bliver fjernet igen kaldes modulets exit metode hvor vi igen iterer
 
 
 \section{Tasklist mod (Mathias)}
+I denne opgave skal vi meget som den forrige iterere over en linked list og udskrive information. I denne opgave drejer det sig om kørende processor på systemet. Opgaven lyder på at løbe gennem processorne med en dybde først søgning og udskrive visse informationer om dem. Al udprintning sker til \textit{kernel output} med \textit{printk()} funktionen.
+
+For at kunne lave en dybde først søgning har vi oprettet en metode som vil bruges rekursivt. Metoden hedder \textit{dfs} og koden ses herunder.
+
+\begin{lstlisting}
+void dfs(struct task_struct *tsk, struct list_head *ptr){
+	//Struct used for holding current task
+	struct task_struct *task;
+	
+	//For each children of the tsk task
+	list_for_each(ptr, &tsk->children){
+		
+		//Takes the task at the current position in the list
+		task = list_entry(ptr, struct task_struct, sibling);
+		
+		//Prints information about the task
+		printk(KERN_INFO "%d %s\n", task->pid, task->comm);
+		
+		//Call resurcivly on the current task
+		dfs(task,list);
+	}
+}
+\end{lstlisting}
+
+Metoden tager to parametre.
+
+\begin{itemize}
+	\item[*tsk] er en pointer til et task element
+	\item[*ptr] er en pointer til elementets faders 
+\end{itemize}
+
 \chapter{Verificering (Jacob)}
 \chapter{Konklusion (Mathias)}
 \chapter{Referencer}
