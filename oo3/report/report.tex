@@ -134,10 +134,10 @@ void dfs(struct task_struct *tsk, struct list_head *ptr){
 	struct task_struct *task;
 	
 	//For each children of the tsk task
-	list_for_each(ptr, &tsk->children){
-		
-		//Takes the task at the current position in the list
-		task = list_entry(ptr, struct task_struct, sibling);
+	list_for_each(ptr, &tsk->children){ 
+	
+		//Gets a pointer to the next element
+		task = list_entry(ptr, struct task_struct, sibling); 
 		
 		//Prints information about the task
 		printk(KERN_INFO "%d %s\n", task->pid, task->comm);
@@ -151,12 +151,19 @@ void dfs(struct task_struct *tsk, struct list_head *ptr){
 Metoden tager to parametre.
 
 \begin{itemize}
-	\item[*tsk] er en pointer til et task element
-	\item[*ptr] er en pointer til elementets faders 
+	\item \textbf{*tsk} er en pointer til et task element
+	\item \textbf{*ptr} er en pointer til elementets faders liste over børn.
 \end{itemize}
+
+\textit{list\_for\_each} fungerer som vores while condition der sikre at vi ikke løber over listens lændge. \textit{list\_entry} bruges til at få en pointer til det næste element.
+
+
 
 \chapter{Verificering (Jacob)}
 \chapter{Konklusion (Mathias)}
+I denne opgave har vi løst stillede opgaver med implementering og derefter verificeret at koden virker.
+
+
 \chapter{Referencer}
 
 \end{document}          

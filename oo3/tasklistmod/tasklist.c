@@ -10,10 +10,10 @@ void dfs(struct task_struct *tsk, struct list_head *ptr){
 	struct task_struct *task;
 
 	//For each children of the tsk task
-	list_for_each(ptr, &tsk->children){
+	list_for_each(ptr, &tsk->children){ 
 			
-		//Takes the task at the current position in the list
-		task = list_entry(ptr, struct task_struct, sibling);
+		//Gets a pointer to the next element
+		task = list_entry(ptr, struct task_struct, sibling); 
 
 		//Prints information about the task
 		printk(KERN_INFO "%d %s\n", task->pid, task->comm);
