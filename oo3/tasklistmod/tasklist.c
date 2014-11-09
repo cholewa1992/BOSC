@@ -19,7 +19,7 @@ void dfs(struct task_struct *tsk, struct list_head *ptr){
 		printk(KERN_INFO "%d %s\n", task->pid, task->comm);
 
 		//Call resurcivly on the current task
-		dfs(task,list);
+		dfs(task,ptr);
 	}
 }
 
