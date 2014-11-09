@@ -160,10 +160,14 @@ Metoden tager to parametre.
 
 \begin{itemize}
 	\item \textbf{*tsk} er en pointer til et task element
-	\item \textbf{*ptr} er en pointer til elementets faders liste over børn.
+	\item \textbf{*ptr} er en pointer til hvor vi er i dette hirakis liste over søskende
 \end{itemize}
 
-\textit{list\_for\_each} fungerer som vores while condition der sikre at vi ikke løber over listens lændge. \textit{list\_entry} bruges til at få en pointer til det næste element.
+\textit{list\_for\_each} fungerer som vores while condition der sikre at vi ikke løber over listens lændge. \textit{list\_entry} bruges til at få en pointer til det næste element i dette hiraki. Da det nu er en pointer til et barn vi har, beder vi om en pointer til den næste søskende i hirakiet.
+
+På den måde får vi udskrevet strukturen i dybden først, da vi altid tager grenene til bunds før vi går til søskende elementer.
+
+
 
 
 \chapter{Konklusion}
