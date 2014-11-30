@@ -49,15 +49,15 @@
 \begingroup
 \let\clearpage\relax
 \chapter{Introduktion}
-I denne rapport arbejdes med tredje obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som Macroer, linkedlists og moduler i linuxkernen.
+I denne rapport arbejdes med tredje obligatoriske opgave i kurset Operativsystemer og C. Vi vil arbejde med koncepter som Macroer, linkedlists og moduler i linuxkernen.
 
 \vspace{20 mm}\chapter{Metode}
-I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
+I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. Opgaverne vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
 \endgroup
 \chapter{Teori}
 \section{Linux kernen og moduler}
 
-Linux kerne moduler er kodestykker som dynamisk kan loades og unloades en kørende linux kerne. De skal have en \textit{module\_init} og \textit{module\_exit} metode, som hhv. afvikles når modulet loades og unloades. Da moduler er del af kernen kan de bruge system kald direkte.
+Linux kerne moduler er kodestykker som dynamisk kan loades og unloades en kørende linux kerne. De skal have en \textit{module\_init} og \textit{module\_exit} metode, som hhv. afvikles når modulet loades og unloades. Da moduler er del af kernen kan de bruge systemkald direkte.
 
 \section{Macro metoder i C}
 
@@ -163,13 +163,14 @@ Metoden tager to parametre.
 
 \begin{itemize}
 	\item \textbf{*tsk} er en pointer til et task element
-	\item \textbf{*ptr} er en pointer til elementets faders liste over børn.
+	\item \textbf{*ptr} er en pointer til hvor vi er i dette hirakis liste over søskende
 \end{itemize}
 
-\textit{list\_for\_each} fungerer som vores while condition der sikre at vi ikke løber over listens lændge. \textit{list\_entry} bruges til at få en pointer til det næste element.
+\textit{list\_for\_each} fungerer som vores while condition der sikre at vi ikke løber over listens lændge. \textit{list\_entry} bruges til at få en pointer til det næste element i dette hiraki. Da det nu er en pointer til et barn vi har, beder vi om en pointer til den næste søskende i hirakiet.
 
+På den måde får vi udskrevet strukturen i dybden først, da vi altid tager grenene til bunds før vi går til søskende elementer.
 
-\vspace{20 mm}\chapter{Konklusion}
+\chapter{Konklusion}
 I denne opgave har vi løst stillede opgaver med implementering og derefter verificeret at koden virker.
 \endgroup
 \appendix
@@ -288,7 +289,7 @@ void dfs(struct task_struct *tsk, struct list_head *ptr){
         printk(KERN_INFO "%d %s\n", task->pid, task->comm);
 
         //Call resurcivly on the current task
-        dfs(task,list);
+        dfs(task,ptr);
     }
 }
 
