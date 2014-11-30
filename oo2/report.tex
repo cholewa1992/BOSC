@@ -9,10 +9,18 @@
 \usepackage{graphicx}
 \usepackage{mathtools}
 \usepackage{amsfonts}
+\usepackage{titlesec, blindtext, color}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{gray75}{gray}{0.75}
+\definecolor{light-gray}{gray}{0.5}
+\newcommand{\hsp}{\hspace{20pt}}
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\textcolor{gray75}{|}\hsp}{0pt}{\Huge\bfseries}
+\titlespacing*{\chapter}{0cm}{-20pt}{10pt}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
 
 \lstset{
   frame=,
@@ -40,16 +48,45 @@
 \maketitle
 
 \chapter{Introduktion}
-I denne rapport arbejdes med anden obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som parallel processering, mutex låsning, semaforer og Bankers algoritme til deadlock håndtering.b
+I denne rapport arbejdes med anden obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som parallel processering, mutex låsning, semaforer og Bankers algoritme til deadlock håndtering.
 
 \section{Metode}
 I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
 
 
+\chapter{Teori}
+
+\section{Proces}
+
+En proces er et program i afvikling, og består udover program koden, en række andre dele som lægges i hukommelsen. En proces er udgjort af følgende dele:
+
+\begin{itemize}
+	\item \textbf{Text} Program koden
+	\item \textbf{Program counter} En tæller der holder styr på hvor langt processen er kommet i eksekveringen af programmet
+	\item \textbf{Stack} Indeholder midlertidig data
+	\item \textbf{Data} Indeholder globale variable
+	\item \textbf{Heap} Indeholder data der dynamisk allokeres på kørselstidspunkt
+\end{itemize}
+
+\section{Process Control Block}
+
+Process Control Block'en er den information et operativ system har om en proces. Informationen bruges til at styre processens state(se fig. \ref{fig:ProcessStates}), afvikling, CPU registrer og information om Scheduling, hukommelse og I/O. Process Control Block'en er en samling af informationer der kan varierer fra proces til proces.
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[scale=0.4]{img/ProcessStates.png}
+		\caption{De forskellige stadier en proces kan være i}
+		\label{fig:ProcessStates}
+	\end{center}
+\end{figure}
+
+
+
 \chapter{Multitrådet sum}
 På en multicore processror kan vi køre instruktioner i parallel. Det vil vi i denne opgave udnytte til hurtigere at udregne $ sum = \displaystyle\sum\limits_{i=0}^n \sqrt{i} $.
 
-Først vil vi beskrive hvordan man kører ting i parallel. Vi bruger biblioteket pthread som bruger linux kernes POSIX kald. En tråd har hver sin stack, process nummer, program counter og register, men deler de andre ressourcer i processen med de andre tråde. (se figur \ref{fig:1})
+Først vil vi beskrive hvordan man kører ting i parallel. Vi bruger biblioteket pthread som bruger linux kernens POSIX kald. En tråd har hver sin stack, process nummer, program counter og register, men deler de andre ressourcer i processen med de andre tråde. (se figur \ref{fig:1})
+En tråd har en stack, process nummer, program counter og registrer, og disse dublikeres for hver tråd tråd der oprettes i en process. De andre ressourcer processen som 
 
 
 \begin{figure}[H]
