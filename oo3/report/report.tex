@@ -41,7 +41,7 @@
 }
 
 % Title Page
-\title{Obligatorisk opgave 3}
+\title{Obligatorisk opgave 3: Linux modules}
 \author{Jacob B. Cholewa \& Mathias Pedersen }
 
 \begin{document}
@@ -51,11 +51,11 @@
 \chapter{Introduktion}
 I denne rapport arbejdes med tredje obligatoriske opgave i kurset Operativsystemer og C. I denne opgave arbejder vi med koncepter som Macroer, linkedlists og moduler i linuxkernen.
 
-\vspace{20 mm}\chapter{Metode (Mathias)}
+\vspace{20 mm}\chapter{Metode}
 I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. De fleste opgaver vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
 \endgroup
 \chapter{Teori}
-\section{Linux kernen og moduler (Mathias)}
+\section{Linux kernen og moduler}
 
 Linux kerne moduler er kodestykker som dynamisk kan loades og unloades en kørende linux kerne. De skal have en \textit{module\_init} og \textit{module\_exit} metode, som hhv. afvikles når modulet loades og unloades. Da moduler er del af kernen kan de bruge system kald direkte.
 
@@ -113,7 +113,10 @@ DFS, eller Dybde først søgning, er en algoritme til at løbe en graf igennem. 
 
 Da C er et stak sprog behøver man ikke et stak da program flowet naturligt vil følge en staks opførsel.
 
+
 \chapter{Implementation}
+\begingroup
+\let\clearpage\relax
 \section{Simple mod}
 
 Dette eksempel (se fuld program kode i bilag \ref{simple.c}) er et linux modul som indeholder personers fødselsdag og printer fødselsdagene til \textit{kernel output}. Vi har altså derfor brug for en struct til at holde information om personer fødselsdag.
@@ -131,7 +134,7 @@ I vores module init metode opretter vi en liste personer. Vi bruger kmalloc til 
 
 Når modulet bliver fjernet igen kaldes modulets exit metode hvor vi igen itererer over listen for at fjerne personerne og deallokerer hukommelsen igen. Her bruger vi en speciel iterator macro som ikke fejler hvis man fjerner elementer under itereringen.
 
-\section{Tasklist mod (Mathias)}
+\section{Tasklist mod}
 I denne opgave skal vi meget som den forrige iterere over en linked list og udskrive information. I denne opgave drejer det sig om kørende processor på systemet. Opgaven lyder på at løbe gennem processorne med en dybde først søgning og udskrive visse informationer om dem. Al udprintning sker til \textit{kernel output} med \textit{printk()} funktionen.
 
 For at kunne lave en dybde først søgning har vi oprettet en metode som vil bruges rekursivt. Metoden hedder \textit{dfs} og koden ses herunder.
@@ -166,9 +169,9 @@ Metoden tager to parametre.
 \textit{list\_for\_each} fungerer som vores while condition der sikre at vi ikke løber over listens lændge. \textit{list\_entry} bruges til at få en pointer til det næste element.
 
 
-\chapter{Konklusion (Mathias)}
+\vspace{20 mm}\chapter{Konklusion}
 I denne opgave har vi løst stillede opgaver med implementering og derefter verificeret at koden virker.
-
+\endgroup
 \appendix
 \chapter{Simple module}
 \label{simple.c}
