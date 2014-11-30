@@ -199,7 +199,7 @@ void *producer(void *args){
 	
 		/* Incrementing produced with symaphore psem */
 		sem_wait(&psem); //waiting for the given symaphore
-		if(++produced > np){ //Incrementing *p and checking if the value is less than the maximum amount of products
+		if(++produced > np){ //Incrementing produced and checking if the value is less than the maximum amount of products
 			sem_post(&psem); //Releasing the lock before returning
 			return 0; //Exiting the producer
 		}
@@ -222,7 +222,7 @@ void *consumer(void *args){
 	
 		/* Incrementing consumed with symaphore csem */
 		sem_wait(&csem); //waiting for the given symaphore
-		if(++consumed > np){ //Incrementing *p and checking if the value is less than the maximum amount of products
+		if(++consumed > np){ //Incrementing consumed and checking if the value is less than the maximum amount of products
 			sem_post(&csem); //Releasing the lock before returning
 			return 0; //Exiting the consumer
 		}
