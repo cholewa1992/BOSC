@@ -52,10 +52,20 @@
 I denne rapport arbejdes med tredje obligatoriske opgave i kurset Operativsystemer og C. Vi vil arbejde med koncepter som Macroer, linkedlists og moduler i linuxkernen.
 
 \vspace{20 mm}\chapter{Metode}
-I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. Opgaverne vil kræve implementering, og disse implementeringer vil blive forklared i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
+I opgaven er stillet en række problemstillinger som skal løses på bedste vis. Alle opgaverne har fokus på C kode, som vi vil afvikle på en Ubuntu Linux virtuel boks. Opgaverne vil kræve implementering, og disse implementeringer vil blive forklare i længden af denne rapport. Vores løsninger testes under implementeringen på logisk basis og derefter ved observering af det afviklede programs opførsel.
 \endgroup
 \chapter{Teori}
 \section{Linux kernen og moduler}
+
+Et operativ system tilbyder et miljø til at køre programmer og tilbyder funktioner til at hjælpe bruger, som fx bruger grænseflade, program eksekvering, I/O tilgang, kommunikation mellem programmer og fejl håndtering. Operativ systemmet håndtere også andre opgaver som ressource allokering, sikkerhed og brugerstyring. De tre sidste nævnte er ikke så meget for at hjælpe brugeren, men for at sikre effektiv brug af resurser på systemmet.
+
+Vi bruger til denne opgave operativ systemmet Linux. Linux bygger på UNIX kernen som er en lagdelt kerne (se figur \ref{fig:unix}). Linux kernen indeholder kun core funktioner tilbudt gennem en masse system kald til at bruge hardwaren i computeren, som fx system kaldet open som kan åbne en fil. Linux implementer en stor del af interfacet POSIX, Portable Operating System Interface, som er en standard der ensarter systemkald så kode kan benyttes på tværs af forskellige UNIX implementeringer (OSX, Solaris, mv.). Man har mulighed for at udvide Linux kernen med moduler. Fordelen ved at skrive kerne moduler er at man har direkte adgang til kernen og derfor kan bruge kernens systemkald og herunder POSIX interfacet direkte.
+
+\begin{figure}
+\includegraphics[width=\linewidth]{img/kernel.png}
+\caption{Traditionel UNIX system struktur.}
+\label{fig:unix}
+\end{figure}
 
 Linux kerne moduler er kodestykker som dynamisk kan loades og unloades en kørende linux kerne. De skal have en \textit{module\_init} og \textit{module\_exit} metode, som hhv. afvikles når modulet loades og unloades. Da moduler er del af kernen kan de bruge systemkald direkte.
 
@@ -170,7 +180,7 @@ Metoden tager to parametre.
 
 På den måde får vi udskrevet strukturen i dybden først, da vi altid tager grenene til bunds før vi går til søskende elementer.
 
-\chapter{Konklusion}
+\vspace{20 mm}\chapter{Konklusion}
 I denne opgave har vi løst stillede opgaver med implementering og derefter verificeret at koden virker.
 \endgroup
 \appendix
