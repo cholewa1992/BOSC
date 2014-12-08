@@ -44,7 +44,7 @@
 
 
 % Title Page
-\title{Obligatorisk opgave 1}
+\title{Obligatorisk opgave 1 - BOSH Shell}
 \author{Jacob B. Cholewa, Rasmus L. Wismann \& Nikolai Storr }
 
 
@@ -55,7 +55,7 @@
 
 \chapter{Introduktion}
 
-I denne rapport vil vi beskrive hvordan vi har implementeret vores version af Shellen BOSC og den teori der ligger til grund for denne implementation. Rapporten er opdelt i tre sektioner, en introduktion, et implementations og teori afsnit og til sidste en konklusion. Næste sektion indeholder kravene til vores Shell.  
+I denne rapport vil vi beskrive hvordan vi har implementeret vores version af Shellen BOSH og den teori der ligger til grund for denne implementation. Rapporten er opdelt i tre sektioner, en introduktion, et implementations og teori afsnit og til sidste en konklusion. Næste sektion indeholder kravene til vores Shell.  
 
 \section{Features}
 \begin{enumerate}
@@ -322,5 +322,25 @@ Herefter gives kontrollen tilbage til vores bosh shell.
 \chapter{Konklusion}
 
 Alle de stillede opgaver er løst og beskrevet i denne rapport, og i en grad der har givet og godt indblik i teorien og implementering med C.
+
+\appendix
+\chapter{BOSC kode}
+\section{bosh.c}
+\lstinputlisting{../BOSH/bosh.c}
+
+\section{Makefile}
+\lstinputlisting{../BOSH/Makefile}
+
+\section{parser.c}
+\lstinputlisting{../BOSH/parser.c}
+
+\section{parser.h}
+\lstinputlisting{../BOSH/parser.h}
+
+\section{print.c}
+\lstinputlisting{../BOSH/print.c}
+
+\section{print.h}
+\lstinputlisting{../BOSH/print.h}
 
 \end{document}          
