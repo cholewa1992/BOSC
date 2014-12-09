@@ -70,7 +70,7 @@ I denne rapport vil vi beskrive hvordan vi har implementeret vores version af Sh
 
 \chapter{Implementation og teori}
 \section{Feature 1 og 2}
-Første krav til vores shell er at vi ikke bruger andre shells eller systemkald for at vores shell kan fungere. Det skal altså være et selvstående program. En shell er en grafisk brugergrænseflade der tillader brugeren at inputte og køre programmer. Shellen er altså en process der kan starte andre programmer som processer. For at en bruger kan eksekvere programmer på maskinen så som {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver. Vi har skrevet vores shell til Ubuntu, og vi leder derfor efter det inputtede program i mapperne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Hvis vi finder programmet som brugeren prøver at starte bruger vi det indbyggede program i linux {\tt execvp}. {\tt execvp} programmet tager en process og bytter det ud med en anden process. Det første vi gør er derfor at oprette en nye process med {\tt fork()}. Fork opretter en kopi af den eksisterende process. Den nye process kaldes for en \textit{child process} og den eksisternede process for en \textit{parrent process}. Dette gøres med følgende kode.
+Første krav til vores shell er at vi ikke bruger andre shells eller systemkald for at vores shell kan fungere. Det skal altså være et selvstående program. En shell er en grafisk brugergrænseflade der tillader brugeren at inputte og køre programmer. Shellen er altså en process der kan starte andre programmer som processer. For at en bruger kan eksekvere programmer på maskinen så som {\tt ls}, {\tt cat} og {\tt wc} skal vi kigge i de forskelle {\tt bin} arkiver. Vi har skrevet vores shell til Ubuntu, og vi leder derfor efter det inputtede program i mapperne {\tt ./}, {\tt /bin/} og {\tt /usr/bin/}. Hvis vi finder programmet som brugeren prøver at starte bruger vi det indbyggede program i linux {\tt execvp}. {\tt execvp} programmet tager en process og bytter det ud med en anden process. Det første vi gør er derfor at oprette en nye process med {\tt fork()}. Fork opretter en kopi af den eksisterende process. Den nye process kaldes for en \textit{child process} og den eksisterende proces for en \textit{parrent process}. Dette gøres med følgende kode.
 
 \begin{lstlisting}
 
@@ -92,7 +92,7 @@ Når vi har lavet et kopi af shell processen bytter vi ved brug af {\tt execvp} 
 \section{Feature 3}
 \section{Baggrundsproces}
 
-Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. Vi ønsker denne feature fordi at en bruger skal kunne køre flere programmer fra shell'en på samme tid. Når vi starter en process vil vi gerne vente på den terminiene inden vi igen tillader input fra brugeren. Dette gør vi med {\tt waitpid(process\_id, status\_location, options)}. Når vi starter en baggrundsproces vælger vi altså derfor blot ikke at vente på barne processen og lader derfor straks brugeren indtaste nyt input. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}). {\tt shellcmd} er en struct vi bruger til at holde brugerens kommando. 
+Hvis en kommando køres med symbolet {\tt \&} skal processen startes som en baggrundsprocess. Vi ønsker denne feature fordi at en bruger skal kunne køre flere programmer fra shell'en på samme tid. Når vi starter en process vil vi gerne vente på, at den terminerer inden vi igen tillader input fra brugeren. Dette gør vi med {\tt waitpid(process\_id, status\_location, options)}. Når vi starter en baggrundsproces vælger vi altså derfor ikke, at vente på barne processen og lader derfor straks brugeren indtaste nyt input. Som det kan ses i kode stykket nedenfor venter vi derfor kun på barne processen hvis {\tt background} er {\tt 0} ({\tt false}). {\tt shellcmd} er en struct vi bruger til at holde brugerens kommando. 
 \begin{lstlisting}
 int executeshellcmd(Shellcmd *shellcmd){
     
@@ -114,15 +114,15 @@ int executeshellcmd(Shellcmd *shellcmd){
 
 \section{Redirect}
 \label{redirect}
-I Linux bliver input devices og data streams betragtet som filer. En file descriptor er et handle til en åben fil.
+I Linux bliver input devices og data streams betragtet som filer. En file descriptor er et ''handle'' til en åben fil.
 
 Hver process har en file descriptor tabel. Tabellen indeholder descriptors der giver processen adgang til åbnede filer, sockets, pipes.   
 
 Biblioteket StdIO giver os adgang til tre file descriptors, StdIn, StdOut og StdErr som alle er character devices i linux. De sender en strøm af bytes enten til eller fra en process. StdOut  beskrives med file descriptor 1. StdIn beskrives med file descriptor 0. 
 
-Vi vil gerne kunde sende input fra et program til et anden program. Dette gøres ved at redirecte den ene process StdOut til en andens process StdIn. Den indbyggede shell i Ubuntu har to redirection operators, {\tt >} og {\tt <}, som begge gør netop dette. Et kald, {\tt p1 > p2}, fungerer ved at p2's input file descriptor sættes til p1's output file descriptor. Systemet lukker samtidig p2's gamle input filedescriptor samt p1's gamle output file descriptor. 
+Vi vil gerne kunne sende input fra et program til et anden program. Dette gøres ved at redirecte den ene process StdOut til en andens process StdIn. Den indbyggede shell i Ubuntu har to redirection operators, {\tt >} og {\tt <}, som begge gør netop dette. Et kald, {\tt p1 > p2}, fungerer ved at p2's input file descriptor sættes til p1's output file descriptor. Systemet lukker samtidig p2's gamle input filedescriptor samt p1's gamle output file descriptor. 
 
-I system kaldet  {\tt p1 < p2} sættes p1's input file descriptor til p2's output file descriptor. Systemet lukker også p1's gamle input filedescriptor samt p2's gamle output file descriptor. 
+I system kaldet  {\tt p1 < p2} sættes p1's input file descriptor til p2's output file descriptor. Systemet lukker også p1's gamle input file descriptor samt p2's gamle output file descriptor. 
 
    
 \subsection{Implementation}
